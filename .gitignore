@@ -1,0 +1,11 @@
+.env
+.env.*
+*.env
+__pycache__/
+*.pyc
+atheism_vectordb/
+*.pdf
+referrals.json
+users.json
+analytics.json
+card_template_*.png
