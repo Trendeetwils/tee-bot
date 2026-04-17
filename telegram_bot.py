@@ -605,7 +605,14 @@ async def run_bot():
     app.add_error_handler(error_handler)
 
     if BROADCAST_CH:
-        app.job_queue.run_daily(daily_job, time=dtime(9, 0, 0))
+        try:
+            if app.job_queue:
+                app.job_queue.run_daily(daily_job, time=dtime(9, 0, 0))
+                print(f"[OK] Daily broadcast → {BROADCAST_CH}")
+            else:
+                print("[WARN] JobQueue not available — install python-telegram-bot[job-queue]")
+        except Exception as e:
+            print(f"[WARN] Could not set up broadcast: {e}")
 
     print("Mirror is live.\n")
     async with app:
