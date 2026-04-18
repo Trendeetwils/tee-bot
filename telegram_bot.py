@@ -125,16 +125,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     track_user(user.id, user.username, user.first_name)
 
-    await update.message.reply_text(
-        f"Hey {user.first_name} 👋\n\n"
-        "*Take the Red Pill.*\n\n"
-        "Two tests. One truth.\n\n"
-        "🛐 *Know Your Faith* — test your religious beliefs. Tee gives you the unfiltered truth about Islam, Christianity, and Hinduism.\n\n"
-        "🔴 *Know the Matrix* — test your life awareness. Mirror shows you the patterns, blind spots, and traps in how you think and live.\n\n"
-        "Which do you want to start with?",
-        parse_mode="Markdown",
-        reply_markup=mode_keyboard()
-    )
+    already_tested = context.user_data.get("onboarded", False) or is_onboarded(user.id)
+
+    if already_tested:
+        # Returning user — show welcome back
+        await update.message.reply_text(
+            f"Welcome back {user.first_name} 👋\n\n"
+            "Want to take another test or keep chatting?",
+            parse_mode="Markdown",
+            reply_markup=mode_keyboard()
+        )
+    else:
+        # New user — force them into a test
+        await update.message.reply_text(
+            f"Hey {user.first_name} 👋\n\n"
+            "*Welcome to Take the Red Pill.* 🔴\n\n"
+            "Two tests. One truth.\n\n"
+            "🛐 *Know Your Faith* — how religious are you really?\n"
+            "🔴 *Know the Matrix* — how aware are you of your own life?\n\n"
+            "Take a test first — it tells me how to talk to you.\n\n"
+            "Pick one to start:",
+            parse_mode="Markdown",
+            reply_markup=mode_keyboard()
+        )
     return SELECT_MODE
 
 # ── Mode selection ─────────────────────────────────────────────────────────────
@@ -334,6 +347,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def topics_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if not context.user_data.get("onboarded", False) and not is_onboarded(user.id):
+        await update.message.reply_text("Take the test first 👉 /start")
+        return
     await update.message.reply_text(TOPICS_MESSAGE, parse_mode="Markdown")
 
 async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
