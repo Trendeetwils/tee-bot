@@ -259,7 +259,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"{bar}  *{pct}%*\n\n"
             f"{desc}\n\n"
             f"_{closing}_\n\n"
-            f"⚔️ /debate  🔗 /referral  ⭐ /donate"
+            f"🔗 /referral  ⭐ /donate"
         )
         card_subtitle = "Know the Matrix"
     else:
@@ -278,7 +278,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"{bar}  *{pct}%*\n\n"
             f"{desc}\n\n"
             f"_{closing}_\n\n"
-            f"⚔️ /debate  🔗 /referral  ⭐ /donate"
+            f"🔗 /referral  ⭐ /donate"
         )
         card_subtitle = "Know Your Faith"
 
@@ -337,8 +337,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/topics — What Tee knows\n"
         "/referral — Your invite link\n"
         "/deepdive — Unlock uncensored mode\n"
-        "/debate — Challenge a friend\n"
-        "/donate — Support Mirror\n"
+                "/donate — Support Mirror\n"
         "/stats — Bot stats (admin)\n\n"
         "*Modes:*\n"
         "🛐 Know Your Faith — religion test\n"
@@ -452,17 +451,20 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for u in recent
     )
 
+    total_tests = s.get("total_faith_tests",0) + s.get("total_matrix_tests",0)
     await update.message.reply_text(
-        f"📊 *Mirror Bot Stats*\n"
+        f"📊 *Take the Red Pill — Stats*\n"
         f"━━━━━━━━━━━━━━━\n\n"
         f"👥 Total users: *{s['total_users']}*\n"
         f"🆕 New today: *{s['new_today']}*\n"
-        f"📅 Active 7d: *{s['active_7d']}*\n"
+        f"📅 Active 7 days: *{s['active_7d']}*\n"
         f"💬 Total messages: *{s['total_messages']}*\n\n"
+        f"🧪 Total tests taken: *{total_tests}*\n"
         f"🛐 Faith tests: *{s['total_faith_tests']}*\n"
-        f"🔴 Matrix tests: *{s['total_matrix_tests']}*\n\n"
-        f"*Faith results:*\n{faith_bd or '  none yet'}\n\n"
-        f"*Matrix results:*\n{matrix_bd or '  none yet'}\n\n"
+        f"🔴 Matrix tests: *{s['total_matrix_tests']}*\n"
+        f"🔥 Deep Dive unlocked: *{s.get('deep_dive_unlocked', 0)}*\n\n"
+        f"*Faith breakdown:*\n{faith_bd or '  none yet'}\n\n"
+        f"*Matrix breakdown:*\n{matrix_bd or '  none yet'}\n\n"
         f"*Religion picks:*\n{religion_bd or '  none yet'}\n\n"
         f"*Recent users:*\n{recent_text or '  none yet'}",
         parse_mode="Markdown"
@@ -611,7 +613,6 @@ async def run_bot():
         ("topics",   topics_command),
         ("referral", referral_command),
         ("deepdive", deepdive_command),
-        ("debate",   debate_command),
         ("donate",   donate_command),
         ("stats",    stats_command),
     ]:

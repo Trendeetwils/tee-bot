@@ -116,6 +116,8 @@ def get_stats() -> dict:
             if mr: matrix_results[mr] = matrix_results.get(mr,0)+1
             if rel: religion_picks[rel] = religion_picks.get(rel,0)+1
 
+        deep_dive_count = sum(1 for u in users if u.get("deep_dive_unlocked"))
+
         return {
             "total_users": total,
             "new_today": new_today,
@@ -123,6 +125,7 @@ def get_stats() -> dict:
             "total_messages": total_msg,
             "total_faith_tests": total_faith,
             "total_matrix_tests": total_matrix,
+            "deep_dive_unlocked": deep_dive_count,
             "top_faith_result": max(faith_results, key=faith_results.get) if faith_results else "N/A",
             "top_matrix_result": max(matrix_results, key=matrix_results.get) if matrix_results else "N/A",
             "top_religion": max(religion_picks, key=religion_picks.get) if religion_picks else "N/A",
