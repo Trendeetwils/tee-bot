@@ -7,7 +7,7 @@ from telegram.ext import (Application, CommandHandler, MessageHandler,
                            ConversationHandler, InlineQueryHandler)
 from agent import AtheismAgent
 from prompts import (WELCOME_MESSAGE, HELP_MESSAGE, TOPICS_MESSAGE, get_tone_prompt,
-                     ATHEISM_SYSTEM_PROMPT, DEEP_DIVE_PROMPT)
+                     ATHEISM_SYSTEM_PROMPT, DEEP_DIVE_PROMPT, REACTIONS, GREETINGS)
 from matrix_prompts import (MATRIX_SYSTEM_PROMPT, get_matrix_tone_prompt,
                              get_matrix_result, MATRIX_WELCOME, MATRIX_DEEP_DIVE_PROMPT)
 from config import TELEGRAM_BOT_TOKEN
@@ -46,12 +46,7 @@ RELIGION_MAP = {
     "both":         ("Christianity + Islam", 20),
     "all":          ("All Religions 🌍", 30),
 }
-
-GREETINGS = {"hi","hey","hello","good morning","good afternoon","good evening",
-             "morning","afternoon","sup","what's up","whats up","yo","hiya","howdy"}
-REACTIONS = {"wow","hmm","hm","interesting","really","oh","ah","wait","lol",
-             "haha","damn","no way","seriously","omg","oh wow","crazy","wild","fr"}
-
+ 
 # ── Keyboards ─────────────────────────────────────────────────────────────────
 
 def mode_keyboard():
@@ -313,6 +308,48 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Card: {e}")
 
+    # ── Post-result smart message ──────────────────────────────────────────────
+    try:
+        link = get_referral_link(BOT_USERNAME, user.id)
+
+        # Leaderboard percentile
+        s = get_stats()
+        total_tests = s.get("total_faith_tests" if mode == "faith" else "total_matrix_tests", 0)
+        leaderboard_line = ""
+        if total_tests and total_tests > 5:
+            order_faith  = ["True Believer","Faithful but Curious","On the Fence","Closet Atheist","Proud Atheist","Full Antitheist"]
+            order_matrix = ["Asleep","Waking Up","Aware","Strategic","Fully Unplugged"]
+            order = order_faith if mode == "faith" else order_matrix
+            bd    = s.get("faith_breakdown" if mode == "faith" else "matrix_breakdown", {})
+            idx   = order.index(label) if label in order else 0
+            below = sum(bd.get(l, 0) for l in order[:idx+1])
+            pct_rank = max(5, min(95, round((below / total_tests) * 100)))
+            leaderboard_line = f"📊 You scored higher than *{pct_rank}%* of people who took this test.\n\n"
+
+        # Cross-test suggestion
+        other = "Matrix 🔴" if mode == "faith" else "Faith 🛐"
+        cross = f"Want to try the *{other} test* too? Type /test\n\n"
+
+        # Share prompt
+        share = "📸 *Screenshot your card and share it* — tag @teetheredpill\n\n"
+
+        # Personalised challenge
+        mode_name = "Faith" if mode == "faith" else "Matrix"
+        challenge = (
+            f"_Forward this to someone who needs it:_\n\n"
+            f"_I just scored {pct}% on the {mode_name} test 🔴_\n"
+            f"_They called me {label} 😏_\n"
+            f"_Think you can beat me? →_ {link}"
+        )
+
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=leaderboard_line + share + cross + challenge,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        logger.error(f"Post-result message error: {e}")
+
     context.user_data.clear()
     context.user_data["onboarded"] = True
     context.user_data["mode"] = mode
@@ -530,18 +567,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Hey 👋 What's on your mind?")
         return
 
-    # ── Reaction ──────────────────────────────────────────────────────────────
-    if low in REACTIONS:
+    # ── Reaction / short agreement ────────────────────────────────────────────
+    if low in REACTIONS or len(msg.split()) <= 4:
         last = agent.get_last_bot_message(user.id, mode)
         if last:
-            prompt = (f"The user reacted with '{msg}'. "
-                      f"Continue the conversation naturally — "
-                      f"add one more layer, fact, or question. Keep it short.")
+            # Keep the thread going — don't start a new topic
+            short_ctx = last[:300] + "..." if len(last) > 300 else last
+            prompt = (
+                f"The user replied '{msg}' to what you just said.\n"
+                f"Your last message was: '{short_ctx}'\n\n"
+                f"Continue building on EXACTLY that point. "
+                f"Don't switch topics. Acknowledge their reaction first, "
+                f"then go one layer deeper. Keep it short and punchy."
+            )
             reply = agent.chat_with_system(user.id, prompt, system_override=base_system, mode=mode)
-        else:
-            reply = "Want to know something even wilder? Just ask 😏"
-        await _send(update, reply)
-        return
+            await _send(update, reply)
+            return
+        # No history — treat as new message, fall through
 
     # ── Normal message ────────────────────────────────────────────────────────
     profile = increment_interactions(user.id)
