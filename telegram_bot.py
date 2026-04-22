@@ -300,55 +300,19 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=update.effective_chat.id, action="upload_photo")
         card = await generate_result_card(
             context.bot, user.id, uname, pct, label, subtitle=card_subtitle)
+        other_mode = "Matrix 🔴" if mode == "faith" else "Faith 🛐"
         await context.bot.send_photo(
             chat_id=update.effective_chat.id, photo=card,
-            caption=f"*{label}* — {pct}% 😏\n\nChallenge your friends 👇\nt.me/{BOT_USERNAME}",
+            caption=(
+                f"*{label}* — {pct}%\n\n"
+                f"📸 Screenshot and share — tag @teetheredpill\n\n"
+                f"Want to try the *{other_mode} test* too? Type /test"
+            ),
             parse_mode="Markdown"
         )
     except Exception as e:
         logger.error(f"Card: {e}")
 
-    # ── Post-result smart message ──────────────────────────────────────────────
-    try:
-        link = get_referral_link(BOT_USERNAME, user.id)
-
-        # Leaderboard percentile
-        s = get_stats()
-        total_tests = s.get("total_faith_tests" if mode == "faith" else "total_matrix_tests", 0)
-        leaderboard_line = ""
-        if total_tests and total_tests > 5:
-            order_faith  = ["True Believer","Faithful but Curious","On the Fence","Closet Atheist","Proud Atheist","Full Antitheist"]
-            order_matrix = ["Asleep","Waking Up","Aware","Strategic","Fully Unplugged"]
-            order = order_faith if mode == "faith" else order_matrix
-            bd    = s.get("faith_breakdown" if mode == "faith" else "matrix_breakdown", {})
-            idx   = order.index(label) if label in order else 0
-            below = sum(bd.get(l, 0) for l in order[:idx+1])
-            pct_rank = max(5, min(95, round((below / total_tests) * 100)))
-            leaderboard_line = f"📊 You scored higher than *{pct_rank}%* of people who took this test.\n\n"
-
-        # Cross-test suggestion
-        other = "Matrix 🔴" if mode == "faith" else "Faith 🛐"
-        cross = f"Want to try the *{other} test* too? Type /test\n\n"
-
-        # Share prompt
-        share = "📸 *Screenshot your card and share it* — tag @teetheredpill\n\n"
-
-        # Personalised challenge
-        mode_name = "Faith" if mode == "faith" else "Matrix"
-        challenge = (
-            f"_Forward this to someone who needs it:_\n\n"
-            f"_I just scored {pct}% on the {mode_name} test 🔴_\n"
-            f"_They called me {label} 😏_\n"
-            f"_Think you can beat me? →_ {link}"
-        )
-
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=leaderboard_line + share + cross + challenge,
-            parse_mode="Markdown"
-        )
-    except Exception as e:
-        logger.error(f"Post-result message error: {e}")
 
     context.user_data.clear()
     context.user_data["onboarded"] = True
@@ -408,25 +372,12 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     count = get_referral_count(user.id)
     rem = max(0, UNLOCK_THRESHOLD - count)
     status = "🔓 *Deep Dive unlocked!* /deepdive" if is_unlocked(user.id) else f"Need *{rem} more* to unlock."
-    # Personalised challenge using last test result
-    profile = agent.get_user_profile(user.id)
-    fl = profile.get("faith_label")
-    fs = profile.get("faith_score")
-    ml = profile.get("matrix_label")
-    ms = profile.get("matrix_score")
-    if fl and fs:
-        challenge = f"\n\n_Forward this to someone:_\n_I just scored {fs}% on the Faith test 🔴_\n_They called me {fl} 😏_\n_Think you can beat me? →_ {link}"
-    elif ml and ms:
-        challenge = f"\n\n_Forward this to someone:_\n_I just scored {ms}% on the Matrix test 🔴_\n_They called me {ml} 😏_\n_Think you can beat me? →_ {link}"
-    else:
-        challenge = f"\n\n_Send this to a friend:_\n_Take the Red Pill test → {link}_"
-
     await update.message.reply_text(
         f"🔗 *Your referral link:*\n`{link}`\n\n"
         f"Friends joined: *{count}/{UNLOCK_THRESHOLD}*\n\n"
         f"{status}\n\n"
-        f"When {UNLOCK_THRESHOLD} friends join the *Deep Dive* unlocks."
-        f"{challenge}",
+        f"When {UNLOCK_THRESHOLD} friends join the *Deep Dive* unlocks.\n\n"
+        f"_Share your link — every friend who joins through it counts._",
         parse_mode="Markdown"
     )
 
