@@ -46,7 +46,7 @@ RELIGION_MAP = {
     "both":         ("Christianity + Islam", 20),
     "all":          ("All Religions 🌍", 30),
 }
- 
+
 # ── Keyboards ─────────────────────────────────────────────────────────────────
 
 def mode_keyboard():
@@ -408,10 +408,25 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     count = get_referral_count(user.id)
     rem = max(0, UNLOCK_THRESHOLD - count)
     status = "🔓 *Deep Dive unlocked!* /deepdive" if is_unlocked(user.id) else f"Need *{rem} more* to unlock."
+    # Personalised challenge using last test result
+    profile = agent.get_user_profile(user.id)
+    fl = profile.get("faith_label")
+    fs = profile.get("faith_score")
+    ml = profile.get("matrix_label")
+    ms = profile.get("matrix_score")
+    if fl and fs:
+        challenge = f"\n\n_Forward this to someone:_\n_I just scored {fs}% on the Faith test 🔴_\n_They called me {fl} 😏_\n_Think you can beat me? →_ {link}"
+    elif ml and ms:
+        challenge = f"\n\n_Forward this to someone:_\n_I just scored {ms}% on the Matrix test 🔴_\n_They called me {ml} 😏_\n_Think you can beat me? →_ {link}"
+    else:
+        challenge = f"\n\n_Send this to a friend:_\n_Take the Red Pill test → {link}_"
+
     await update.message.reply_text(
         f"🔗 *Your referral link:*\n`{link}`\n\n"
-        f"Friends joined: *{count}/{UNLOCK_THRESHOLD}*\n\n{status}\n\n"
-        f"When {UNLOCK_THRESHOLD} friends join through your link the *Deep Dive* unlocks.",
+        f"Friends joined: *{count}/{UNLOCK_THRESHOLD}*\n\n"
+        f"{status}\n\n"
+        f"When {UNLOCK_THRESHOLD} friends join the *Deep Dive* unlocks."
+        f"{challenge}",
         parse_mode="Markdown"
     )
 
