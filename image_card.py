@@ -96,7 +96,7 @@ async def generate_result_card(bot, user_id: int, username: str,
     f_label = load_font(64, bold=True)
 
     # ── Header ────────────────────────────────────────────────────────────────
-    dc(draw, 20, "MIRROR", f_small, accent)
+    dc(draw, 20, "TAKE THE RED PILL", f_small, accent)
     dc(draw, 70, subtitle.upper(), f_micro, "#555555")
 
     # ── Score (big glowing number) ────────────────────────────────────────────

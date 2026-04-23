@@ -36,6 +36,29 @@ def save_mode(user_id: int, mode: str):
     data[key]["mode"] = mode
     _save(data)
 
+def save_location(user_id: int, country: str, city: str = ""):
+    data = _load()
+    key = str(user_id)
+    if key not in data:
+        data[key] = {}
+    data[key]["country"] = country
+    data[key]["city"] = city
+    _save(data)
+
+def get_location(user_id: int) -> dict:
+    data = _load()
+    u = data.get(str(user_id), {})
+    return {"country": u.get("country",""), "city": u.get("city","")}
+
+def has_both_tests(user_id: int) -> bool:
+    data = _load()
+    u = data.get(str(user_id), {})
+    return bool(u.get("faith_tone")) and bool(u.get("matrix_tone"))
+
+def can_switch_mode(user_id: int) -> bool:
+    """For testing phase: must have taken both tests to switch"""
+    return has_both_tests(user_id)
+
 def get_mode(user_id: int) -> str:
     data = _load()
     return data.get(str(user_id), {}).get("mode", "faith")
@@ -81,4 +104,4 @@ def get_tone(user_id: int) -> str:
     return get_user(user_id).get("tone", "analytical")
 
 def get_religion(user_id: int) -> str:
-    return get_user(user_id).get("religion", "all") 
+    return get_user(user_id).get("religion", "all")

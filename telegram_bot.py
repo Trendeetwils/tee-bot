@@ -19,7 +19,8 @@ from daily_broadcast import broadcast
 from image_card import generate_result_card
 from onboarding import (is_onboarded, complete_onboarding,
                         increment_interactions, get_tone, get_religion,
-                        save_mode, get_mode)
+                        save_mode, get_mode, save_location, get_location,
+                        has_both_tests, can_switch_mode)
 from analytics import (track_user, track_message, track_faith_test,
                        track_matrix_test, get_stats, get_recent_users)
 from dotenv import load_dotenv
@@ -314,6 +315,24 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Card: {e}")
 
 
+    # Ask for location if not set yet
+    try:
+        loc = get_location(user.id)
+        if not loc.get("country"):
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=(
+                    "🌍 One quick thing — where are you from?\n\n"
+                    "Just type your country or city.\n"
+                    "I use it to make examples more relevant to you.\n\n"
+                    "_(You can also do this anytime with /location)_"
+                ),
+                parse_mode="Markdown"
+            )
+            context.user_data["awaiting_location"] = True
+    except Exception:
+        pass
+
     context.user_data.clear()
     context.user_data["onboarded"] = True
     context.user_data["mode"] = mode
@@ -431,6 +450,78 @@ async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "👉 t.me/honestteebot",
         parse_mode="Markdown"
     )
+
+async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show current mode and allow switching"""
+    user = update.effective_user
+    mode = context.user_data.get("mode") or get_mode(user.id)
+    other = "matrix" if mode == "faith" else "faith"
+    other_emoji = "🔴" if other == "matrix" else "🛐"
+    other_name = "Know the Matrix" if other == "matrix" else "Know Your Faith"
+    mode_name = "Know Your Faith 🛐" if mode == "faith" else "Know the Matrix 🔴"
+
+    can_switch = can_switch_mode(user.id)
+
+    if can_switch:
+        switch_text = (
+            f"✅ You can switch modes.\n\n"
+            f"Type /switch to move to *{other_name} {other_emoji}*"
+        )
+    else:
+        switch_text = (
+            f"🔒 To switch modes you need to complete *both tests* first.\n\n"
+            f"You haven't taken the {other_name} test yet.\n"
+            f"Type /test to take it."
+        )
+
+    await update.message.reply_text(
+        f"*Current mode: {mode_name}*\n\n"
+        f"All your messages are being answered in this mode.\n\n"
+        f"{switch_text}",
+        parse_mode="Markdown"
+    )
+
+
+async def switch_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Switch between faith and matrix mode"""
+    user = update.effective_user
+    mode = context.user_data.get("mode") or get_mode(user.id)
+
+    if not can_switch_mode(user.id):
+        other = "Know the Matrix 🔴" if mode == "faith" else "Know Your Faith 🛐"
+        await update.message.reply_text(
+            f"🔒 *Mode switching is locked.*\n\n"
+            f"Take the *{other}* test first to unlock switching.\n\n"
+            f"Type /test to begin.",
+            parse_mode="Markdown"
+        )
+        return
+
+    # Switch mode
+    new_mode = "matrix" if mode == "faith" else "faith"
+    new_name = "Know the Matrix 🔴" if new_mode == "matrix" else "Know Your Faith 🛐"
+    context.user_data["mode"] = new_mode
+    context.user_data["last_tone"] = "analytical"
+    save_mode(user.id, new_mode)
+
+    await update.message.reply_text(
+        f"✅ *Switched to {new_name}*\n\n"
+        f"All your messages will now be answered in this mode.\n\n"
+        f"Type /mode anytime to check or switch again.",
+        parse_mode="Markdown"
+    )
+
+
+async def location_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Let user set their location for personalised examples"""
+    await update.message.reply_text(
+        "🌍 *Where are you from?*\n\n"
+        "Just type your country or city — I'll use it to make examples more relevant to you, to your location.\n\n"
+        "Example: _Israel_, _Mecca_, _United State_, _Nigeria_, _Ghana_, _Texas, US or _Lagos, Nigeria_",
+        parse_mode="Markdown"
+    )
+    context.user_data["awaiting_location"] = True
+
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ADMIN_ID and update.effective_user.id != ADMIN_ID:
@@ -623,6 +714,9 @@ async def run_bot():
         ("deepdive", deepdive_command),
         ("donate",   donate_command),
         ("stats",    stats_command),
+        ("mode",     mode_command),
+        ("switch",   switch_command),
+        ("location", location_command),
     ]:
         app.add_handler(CommandHandler(cmd, fn))
 
