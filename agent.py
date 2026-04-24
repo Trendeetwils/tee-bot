@@ -66,11 +66,13 @@ class AtheismAgent:
             if p.get("city"):
                 loc = f"{p['city']}, {p['country']}"
             lines.append(f"- Location: {loc}")
-            lines.append(f"  → When making examples about real places, use {loc} context not US/Western defaults")
-            lines.append(f"  → Reference things relevant to {p['country']} where appropriate")
+            lines.append(f"  → When the user asks location-specific questions or you need a local example, reference {loc}")
+            lines.append(f"  → Only use location context when it is clearly relevant — do not inject it into every response")
+        else:
+            lines.append("- Location: unknown — do not assume any country or region. Use neutral global examples unless the user mentions their location.")
         lines.append("\nUse this to personalise your response. Reference their test result naturally when relevant.")
         lines.append("If they scored high atheism/awareness — be bolder. If they scored low — be more curious and gentle.")
-        lines.append("ALWAYS use the user's location when giving examples — never default to American examples if user is from Africa, Nigeria, etc.")
+        lines.append("CRITICAL: Never assume the user is Nigerian or African unless their profile says so. Use neutral examples by default.")
         return "\n".join(lines)
 
     def get_history(self, user_id: int, mode: str = "faith") -> list:
