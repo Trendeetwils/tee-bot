@@ -799,6 +799,7 @@ async def run_bot():
 
 def main():
     import time
+    from telegram.error import Conflict
     retry = 0
     print("[START] Take the Red Pill bot starting...")
     while True:
@@ -808,15 +809,20 @@ def main():
         except KeyboardInterrupt:
             print("\n[STOP] Stopped by user.")
             break
+        except Conflict:
+            # Another instance is running — wait for it to die then retry
+            print("[CONFLICT] Another instance detected. Waiting 15s for it to stop...")
+            time.sleep(15)
+            retry = 0  # reset retry count after conflict resolves
         except Exception as e:
             retry += 1
-            wait = min(30, 3 * retry)
+            wait = min(30, 5 * retry)
             print(f"[CRASH] {type(e).__name__}: {e}")
             print(f"[RETRY] Restarting in {wait}s...")
             time.sleep(wait)
         else:
-            print("[EXIT] Bot exited cleanly — restarting...")
-            time.sleep(3)
+            print("[EXIT] Bot exited cleanly — restarting in 5s...")
+            time.sleep(5)
 
 if __name__ == "__main__":
     import time
