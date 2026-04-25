@@ -16,6 +16,7 @@ from matrix_questions import get_matrix_questions
 from referral import (get_referral_link, record_referral,
                       get_referral_count, is_unlocked, UNLOCK_THRESHOLD)
 from daily_broadcast import broadcast
+from reengagement import send_reengagement_messages
 from image_card import generate_result_card
 from onboarding import (is_onboarded, complete_onboarding,
                         increment_interactions, get_tone, get_religion,
@@ -737,6 +738,11 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def daily_job(context: ContextTypes.DEFAULT_TYPE):
     await broadcast(context.bot)
 
+async def reengagement_job(context: ContextTypes.DEFAULT_TYPE):
+    supabase_url = os.getenv("SUPABASE_URL", "")
+    supabase_key = os.getenv("SUPABASE_KEY", "")
+    await send_reengagement_messages(context.bot, supabase_url, supabase_key)
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 async def run_bot():
@@ -788,6 +794,14 @@ async def run_bot():
                 print("[WARN] JobQueue not available")
         except Exception as e:
             print(f"[WARN] Broadcast error: {e}")
+
+    # Reengagement pings — runs daily at 10am UTC
+    try:
+        if app.job_queue:
+            app.job_queue.run_daily(reengagement_job, time=dtime(10, 0, 0))
+            print("[OK] Reengagement job scheduled")
+    except Exception as e:
+        print(f"[WARN] Reengagement setup error: {e}")
 
     print("Take the Red Pill bot is live.\n")
     async with app:
