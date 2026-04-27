@@ -1,73 +1,77 @@
 """
-reengagement.py
-================
-Pings inactive users after 2-5 days of no activity.
-Runs as a daily job — checks who hasn't chatted and sends them a nudge.
-
-IMPORTANT — Telegram rules:
-- Users must have messaged the bot first (they have)
-- Cannot send bulk spam — messages must feel personal
-- One message per inactive period — never back to back
-- Users can /stop at any time to opt out
+reengagement.py — Pings inactive users after 2-5 days
+First message is always general. Follow-ups are religion/mode specific.
 """
 
-import os, random
+import os, random, asyncio, requests
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
 
-load_dotenv()
+# ── FIRST MESSAGE — always general, warm, curiosity-driven ───────────────────
 
-# ── Message templates — feel personal, not automated ─────────────────────────
-
-FAITH_NUDGES = [
-    "👀 Hey — you left mid-thought last time.\n\nI've got a question that's been sitting here:\n\n*If God knew you'd doubt him before you were born — is punishing you for it still fair?*\n\nThink about it. Reply when you're ready.",
-    "🔥 Quick one.\n\n*The Bible has been rewritten 450+ times.*\n\nWhich version is the actual word of God?\n\nSeriously — nobody ever answers this properly.",
-    "📖 Something I've been thinking about.\n\nBoth Islam and Christianity promise heaven.\nBoth threaten hell.\nBoth claim to be the only true path.\n\n*They can't both be right. So what does that mean?*\n\nCome argue with me.",
-    "💀 Real question:\n\n*If prayer worked — hospitals would be empty.*\n\nWhy doesn't it work that way?\n\nI'm ready when you are.",
-    "👁️ Here's something nobody talks about.\n\nThe same God who watched slavery, genocide, and child abuse for thousands of years — *did nothing.*\n\nHow do you make peace with that?\n\nSeriously asking.",
+FIRST_NUDGES = [
+    "Hey 👋\n\nIt's been a few days.\n\nAnything you've been thinking about — faith, life, something someone said that stuck with you?\n\nI'm here. No pressure.",
+    "🔴 Quick check in.\n\nYou took the test a few days ago.\n\nHave you thought about your result since then?\n\nMost people do — and have questions after. What's yours?",
+    "Hey 👋 Been a while.\n\nYou haven't tried the other test yet.\n\nType /test — takes 2 minutes. People say it hits different the second time.",
+    "👁️ Something worth asking yourself today:\n\n*What's one thing you believe strongly — that you've never actually questioned?*\n\nJust sit with it. No wrong answer.",
+    "🔴 One question.\n\n*Is the life you're living the one you chose — or the one that happened to you?*\n\nNo rush. Just think about it.",
 ]
+
+# ── FAITH FOLLOW-UP — by religion ────────────────────────────────────────────
+
+CHRISTIANITY_NUDGES = [
+    "📖 Something that doesn't get discussed enough.\n\nThe Bible has been rewritten *450+ times* by human hands.\n\nWhich version is the actual word of God?\n\nSeriously — nobody ever answers this properly.",
+    "✝️ Real question.\n\n*If God knew before you were born that you'd sin and end up in hell — why create you?*\n\nIs that love — or a setup?",
+    "💀 The Trinity.\n\nFather, Son, and Holy Spirit — *one* God.\n\nIf Jesus prayed to God — was he praying to himself?\n\nThis one bothers more Christians than they admit.",
+    "📖 Hebrews 9:22 — *without the shedding of blood there is no forgiveness.*\n\nWhy would an all-powerful God need blood to forgive?\n\nThat sounds more like a pagan ritual than a loving father.",
+    "✝️ Christmas trees. Easter eggs. The name Easter itself.\n\nAll from pagan traditions — rebranded.\n\n*How much of Christianity is original?*",
+]
+
+ISLAM_NUDGES = [
+    "☪️ Quran 4:34 allows men to beat their wives.\n\nScholars say it means a *light tap*.\n\n*But why would a loving God include that instruction at all?*\n\nSeriously.",
+    "📖 The Quran says the sun sets in a muddy spring (18:86).\n\nThe creator of the universe — got where the sun goes wrong?\n\nHow do you explain that?",
+    "☪️ Islam spread across Arabia, Africa, and Persia *largely through military conquest*.\n\n*Does a religion of peace spread by the sword?*\n\nCome argue with me.",
+    "💀 Leaving Islam can carry the death penalty in many Islamic teachings.\n\n*A religion you cannot leave without dying is not a religion. It's a prison.*\n\nWhat do you think?",
+    "📖 Muhammad received all his revelations *alone* — no witnesses.\n\nEvery religion started with one person's unverifiable private claim.\n\nWhat makes this one different?",
+]
+
+HINDUISM_NUDGES = [
+    "🕉️ The caste system — dividing humans by birth into a hierarchy of worth.\n\n*Divinely ordained suffering for sins in a past life you can't remember.*\n\nIs that justice — or the most effective poverty trap ever invented?",
+    "🕉️ Karma teaches that suffering in this life comes from a past life.\n\n*Does that mean victims of abuse or poverty deserve it?*\n\nThink about what that framework actually does to real people.",
+    "📖 Reincarnation — cycling through millions of births.\n\n*Has anyone come back to confirm it?*\n\nWhat evidence beyond ancient texts do we have?",
+]
+
+# ── MATRIX FOLLOW-UP ──────────────────────────────────────────────────────────
 
 MATRIX_NUDGES = [
-    "🔴 Something to think about.\n\n*Most people are living a life someone else designed for them.*\n\nAre you one of them?\n\nCome back and let's talk about it.",
-    "🧠 Quick question.\n\n*If you died tomorrow — would you say you actually lived?*\n\nNot trying to be dark. Just think it's worth answering honestly.",
-    "⚡ Still thinking about your Matrix score.\n\n*The biggest gap isn't between knowing and not knowing.*\n*It's between knowing and actually doing.*\n\nWhat's yours right now?",
-    "🔴 One thing.\n\n*Hard work alone doesn't lead to success.*\n*Timing, positioning, and who you know matter more than anyone admits.*\n\nAsk me about the real formula.",
-    "💡 Real talk.\n\n*Your 5 closest friends shape who you are more than any book or course.*\n\nDo you like who that average makes you?\n\nCome back — let's get into it.",
+    "🔴 Still thinking about your Matrix score.\n\n*The biggest gap isn't between knowing and not knowing.*\n*It's between knowing — and actually doing something about it.*\n\nWhat's yours right now?",
+    "🧠 One thing.\n\n*Your 5 closest friends shape who you become more than any book or mentor.*\n\nDo you like who that average makes you?\n\nCome back — let's get into it.",
+    "⚡ Real question.\n\n*Hard work alone doesn't lead to success.*\n\nTiming, positioning, and access matter more than most people admit.\n\nAsk me about the real formula.",
+    "🔴 Quick one.\n\n*If you died tomorrow — would you say you actually lived?*\n\nNot trying to be dark. Just think it's worth answering honestly.",
+    "💡 Something to consider.\n\n*Most people are living a life someone else designed for them.*\n\nSchool told you what to learn.\nSociety told you what success looks like.\nReligion told you what to fear.\n\n*What did YOU actually decide?*",
 ]
 
-GENERAL_NUDGES = [
-    "Hey 👋\n\nIt's been a few days.\n\nAnything on your mind — faith, life, or just something you've been questioning?\n\nI'm here.",
-    "🔴 Quick check in.\n\nYou haven't finished the other test yet.\n\nType /test — takes 2 minutes. Might surprise you.",
-    "👀 Still thinking about your result?\n\nMost people are.\n\nAsk me anything — I don't bite. I just don't sugarcoat either.",
-]
+def get_nudge(user: dict, is_first: bool) -> str:
+    if is_first:
+        return random.choice(FIRST_NUDGES)
 
-def get_nudge_message(user_data: dict) -> str:
-    """Pick the right nudge based on what the user has done"""
-    faith_score  = user_data.get("faith_last_score")
-    matrix_score = user_data.get("matrix_last_score")
+    religion = user.get("faith_religion", "")
+    faith_score = user.get("faith_last_score")
+    matrix_score = user.get("matrix_last_score")
+    active_mode = user.get("active_mode", "faith")
 
-    if faith_score and not matrix_score:
-        # Has Faith score but not Matrix — nudge toward Matrix
-        msg = random.choice(FAITH_NUDGES)
-        msg += "\n\n_Also — have you tried the Matrix test yet? Type /test_"
-        return msg
-    elif matrix_score and not faith_score:
-        # Has Matrix score but not Faith — nudge toward Faith
-        msg = random.choice(MATRIX_NUDGES)
-        msg += "\n\n_Also — try the Faith test if you haven't. Type /test_"
-        return msg
-    elif faith_score:
-        return random.choice(FAITH_NUDGES)
-    elif matrix_score:
+    if active_mode == "matrix" or (matrix_score and not faith_score):
         return random.choice(MATRIX_NUDGES)
+
+    if religion == "islam":
+        return random.choice(ISLAM_NUDGES)
+    elif religion == "hinduism":
+        return random.choice(HINDUISM_NUDGES)
     else:
-        return random.choice(GENERAL_NUDGES)
+        # Default to Christianity nudges for all faith users
+        return random.choice(CHRISTIANITY_NUDGES)
 
 async def send_reengagement_messages(bot, supabase_url: str, supabase_key: str):
-    """Find inactive users and send them a nudge"""
-    import requests
-
-    if not supabase_url or not supabase_key:
+    if not supabase_url or not supabase_key: 
         print("[Reengagement] Supabase not configured — skipping")
         return
 
@@ -76,52 +80,51 @@ async def send_reengagement_messages(bot, supabase_url: str, supabase_key: str):
         "Authorization": f"Bearer {supabase_key}",
         "Content-Type": "application/json",
     }
-
-    # Find users inactive for 2-5 days who haven't been nudged recently
+ 
     now = datetime.now(timezone.utc)
-    cutoff_recent = (now - timedelta(days=2)).isoformat()   # inactive at least 2 days
-    cutoff_old    = (now - timedelta(days=5)).isoformat()   # not more than 5 days
+    cutoff_recent = (now - timedelta(days=2)).isoformat()
+    cutoff_old    = (now - timedelta(days=5)).isoformat()
 
-    try:
-        # Get users updated between 2 and 5 days ago
+    try: 
         r = requests.get(
             f"{supabase_url}/rest/v1/users"
             f"?updated_at=lte.{cutoff_recent}"
             f"&updated_at=gte.{cutoff_old}"
-            f"&select=user_id,first_name,faith_last_score,matrix_last_score,last_nudged",
-            headers=headers,
-            timeout=10
+            f"&select=user_id,first_name,faith_last_score,matrix_last_score,"
+            f"faith_religion,active_mode,last_nudged",
+            headers=headers, timeout=10
         )
         users = r.json()
         if not isinstance(users, list):
-            print(f"[Reengagement] Unexpected response: {users}")
+            print(f"[Reengagement] Bad response: {users}")
             return
 
-        print(f"[Reengagement] Found {len(users)} inactive users to nudge")
-
+        print(f"[Reengagement] {len(users)} inactive users found")
         sent = 0
+
         for user in users:
             user_id = user.get("user_id")
             if not user_id:
                 continue
-
-            # Don't nudge if already nudged in the last 5 days
+ 
             last_nudged = user.get("last_nudged")
-            if last_nudged:
-                last_nudged_dt = datetime.fromisoformat(last_nudged.replace("Z", "+00:00"))
-                if (now - last_nudged_dt).days < 5:
-                    continue
+            is_first = not bool(last_nudged)
 
-            # Send the nudge
-            try:
-                msg = get_nudge_message(user)
+            if last_nudged:
+                try:
+                    last_dt = datetime.fromisoformat(last_nudged.replace("Z", "+00:00"))
+                    if (now - last_dt).days < 5:
+                        continue
+                except Exception:
+                    pass
+
+            try: 
+                msg = get_nudge(user, is_first)
                 await bot.send_message(
                     chat_id=user_id,
                     text=msg,
                     parse_mode="Markdown"
-                )
-
-                # Record that we nudged this user
+                ) 
                 requests.patch(
                     f"{supabase_url}/rest/v1/users?user_id=eq.{user_id}",
                     headers={**headers, "Prefer": "return=minimal"},
@@ -129,20 +132,17 @@ async def send_reengagement_messages(bot, supabase_url: str, supabase_key: str):
                     timeout=5
                 )
                 sent += 1
-                print(f"[Reengagement] Nudged user {user_id} ({user.get('first_name','')})")
-
-                # Small delay between messages to avoid rate limiting
-                import asyncio
+                print(f"[Reengagement] Nudged {user.get('first_name',user_id)}")
                 await asyncio.sleep(0.5)
 
             except Exception as e:
-                err = str(e)
-                if "blocked" in err.lower() or "forbidden" in err.lower() or "deactivated" in err.lower():
-                    print(f"[Reengagement] User {user_id} blocked bot or deactivated")
+                err = str(e).lower()
+                if any(x in err for x in ["blocked","forbidden","deactivated","not found"]):
+                    print(f"[Reengagement] User {user_id} unreachable")
                 else:
-                    print(f"[Reengagement] Failed to nudge {user_id}: {e}")
+                    print(f"[Reengagement] Error for {user_id}: {e}")
 
-        print(f"[Reengagement] Done — sent {sent} nudges")
+        print(f"[Reengagement] Done — {sent} nudges sent")
 
     except Exception as e:
-        print(f"[Reengagement] Error: {e}")
+        print(f"[Reengagement] Fatal error: {e}")
