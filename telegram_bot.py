@@ -14,7 +14,8 @@ from config import TELEGRAM_BOT_TOKEN
 from questions_bank import get_religion_questions
 from matrix_questions import get_matrix_questions
 from referral import (get_referral_link, record_referral,
-                      get_referral_count, is_unlocked, UNLOCK_THRESHOLD)
+                      get_referral_count, is_unlocked, UNLOCK_THRESHOLD,
+                      check_and_update_streak, streak_message)          # ← NEW
 from daily_broadcast import broadcast
 from reengagement import send_reengagement_messages
 from image_card import generate_result_card
@@ -117,10 +118,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     track_user(user.id, user.username, user.first_name)
 
+    # ── Streak check on /start ─────────────────────────────────────────────────
+    streak_count, is_new_day = check_and_update_streak(user.id)
+    streak_banner = streak_message(streak_count) if is_new_day else ""
+
     already_tested = context.user_data.get("onboarded", False) or is_onboarded(user.id)
 
     if already_tested:
         await update.message.reply_text(
+            f"{streak_banner}"
             f"Welcome back {user.first_name} 👋\n\n"
             "Want to take another test or keep chatting?",
             parse_mode="Markdown",
@@ -244,7 +250,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "strategic":  "You already see the game. Let's sharpen the strategy. 🔴",
         }.get(tone, "Ask me anything.")
 
-        # Leaderboard
+        # ── Score comparison (matrix) ──────────────────────────────────────────
         s = get_stats()
         total_tests = s.get("total_matrix_tests", 0)
         leaderboard_line = ""
@@ -254,7 +260,10 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             idx_l = order_matrix.index(label) if label in order_matrix else 0
             below = sum(bd.get(l, 0) for l in order_matrix[:idx_l+1])
             pct_rank = max(5, min(95, round((below / total_tests) * 100)))
-            leaderboard_line = f"\n\n📊 You scored higher than *{pct_rank}%* of people who took this test."
+            leaderboard_line = (
+                f"\n\n📊 You're more aware than *{pct_rank}%* of people "
+                f"who took this test."
+            )
 
         result_text = (
             f"*Your Matrix Score: {label} {emoji}*\n\n"
@@ -277,7 +286,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "provocative": "You already know the game. Zero filter from here. 🔥",
         }.get(tone, "Ask me anything.")
 
-        # Leaderboard
+        # ── Score comparison (faith) ───────────────────────────────────────────
         s = get_stats()
         total_tests = s.get("total_faith_tests", 0)
         leaderboard_line = ""
@@ -287,7 +296,11 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             idx_l = order_faith.index(label) if label in order_faith else 0
             below = sum(bd.get(l, 0) for l in order_faith[:idx_l+1])
             pct_rank = max(5, min(95, round((below / total_tests) * 100)))
-            leaderboard_line = f"\n\n📊 You scored higher than *{pct_rank}%* of people who took this test."
+            # ← KEY CHANGE: wording now matches your spec
+            leaderboard_line = (
+                f"\n\n📊 You're more atheist than *{pct_rank}%* of people "
+                f"who took this test."
+            )
 
         result_text = (
             f"*Your Faith Score: {label} {emoji}*\n\n"
@@ -619,6 +632,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    # ── STREAK CHECK — first message of the day ───────────────────────────────
+    streak_count, is_new_day = check_and_update_streak(user.id)
+    if is_new_day and streak_count >= 2:
+        await update.message.reply_text(
+            streak_message(streak_count),
+            parse_mode="Markdown"
+        )
+
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
     # ── RESTORE MODE ──────────────────────────────────────────────────────────
@@ -823,11 +844,10 @@ def main():
         except KeyboardInterrupt:
             print("\n[STOP] Stopped by user.")
             break
-        except Conflict:
-            # Another instance is running — wait for it to die then retry
+        except Conflict: 
             print("[CONFLICT] Another instance detected. Waiting 15s for it to stop...")
             time.sleep(15)
-            retry = 0  # reset retry count after conflict resolves
+            retry = 0
         except Exception as e:
             retry += 1
             wait = min(30, 5 * retry)
