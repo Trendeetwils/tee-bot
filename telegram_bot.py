@@ -1,4 +1,4 @@
-import logging, os, asyncio
+'''import logging, os, asyncio
 from datetime import time as dtime
 from telegram import (Update, InlineKeyboardButton, InlineKeyboardMarkup,
                       InlineQueryResultArticle, InputTextMessageContent)
@@ -15,7 +15,7 @@ from questions_bank import get_religion_questions
 from matrix_questions import get_matrix_questions
 from referral import (get_referral_link, record_referral,
                       get_referral_count, is_unlocked, UNLOCK_THRESHOLD,
-                      check_and_update_streak, streak_message)          # ← NEW
+                      check_and_update_streak, streak_message)
 from daily_broadcast import broadcast
 from reengagement import send_reengagement_messages
 from image_card import generate_result_card
@@ -36,32 +36,37 @@ ADMIN_ID      = int(os.getenv("ADMIN_ID", "0"))
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-print("\n=== Starting Mirror Bot ===\n")
+print("\\n=== Starting Mirror Bot ===\\n")
 agent = AtheismAgent()
 
 SELECT_MODE, SELECT_RELIGION, QUESTION = range(3)
 
 RELIGION_MAP = {
-    "christianity": ("Christianity ✝️", 10),
-    "islam":        ("Islam ☪️", 10),
-    "hinduism":     ("Hinduism 🕉️", 10),
+    "christianity": ("Christianity \u271d\ufe0f", 10),
+    "islam":        ("Islam \u262a\ufe0f", 10),
+    "hinduism":     ("Hinduism \U0001f549\ufe0f", 10),
     "both":         ("Christianity + Islam", 20),
-    "all":          ("All Religions 🌍", 30),
+    "all":          ("All Religions \U0001f30d", 30),
 }
+
+# \u2500\u2500 Location skip keyboard \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+LOCATION_SKIP_KB = InlineKeyboardMarkup([
+    [InlineKeyboardButton("Skip \u2192", callback_data="skip_location")]
+])
 
 def mode_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🛐 Know Your Faith", callback_data="mode_faith")],
-        [InlineKeyboardButton("🔴 Know the Matrix", callback_data="mode_matrix")],
+        [InlineKeyboardButton("\U0001f6d0 Know Your Faith", callback_data="mode_faith")],
+        [InlineKeyboardButton("\U0001f534 Know the Matrix", callback_data="mode_matrix")],
     ])
 
 def religion_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("✝️ Christianity",  callback_data="rel_christianity")],
-        [InlineKeyboardButton("☪️ Islam",         callback_data="rel_islam")],
-        [InlineKeyboardButton("🕉️ Hinduism",      callback_data="rel_hinduism")],
-        [InlineKeyboardButton("✝️ + ☪️ Both",     callback_data="rel_both")],
-        [InlineKeyboardButton("🌍 All Religions", callback_data="rel_all")],
+        [InlineKeyboardButton("\u271d\ufe0f Christianity",  callback_data="rel_christianity")],
+        [InlineKeyboardButton("\u262a\ufe0f Islam",         callback_data="rel_islam")],
+        [InlineKeyboardButton("\U0001f549\ufe0f Hinduism",      callback_data="rel_hinduism")],
+        [InlineKeyboardButton("\u271d\ufe0f + \u262a\ufe0f Both",     callback_data="rel_both")],
+        [InlineKeyboardButton("\U0001f30d All Religions", callback_data="rel_all")],
     ])
 
 def build_keyboard(qi, options):
@@ -72,19 +77,19 @@ def build_keyboard(qi, options):
 
 def faith_result(score, total):
     pct = round((score / (total * 5)) * 100)
-    if pct <= 15:   label,emoji,desc = "True Believer","🙏","You trust your faith fully.\n\nTee respects the commitment — even if he disagrees with every bit of it."
-    elif pct <= 35: label,emoji,desc = "Faithful but Curious","🤔","You believe, but cracks are forming.\n\nDangerous territory — once you start asking, it's hard to stop."
-    elif pct <= 55: label,emoji,desc = "On the Fence","😐","Half in, half out.\n\nYou're the agnostic who hasn't fully admitted it yet."
-    elif pct <= 75: label,emoji,desc = "Closet Atheist","👀","You don't really believe anymore.\n\nYou just haven't said it out loud yet."
-    elif pct <= 90: label,emoji,desc = "Proud Atheist","😤","Logic runs your life, not scripture.\n\nYou might stay quiet at family dinners — but inside you are done."
-    else:           label,emoji,desc = "Full Antitheist","🔥","You don't just disbelieve — you think religion is actively harmful.\n\nHitchens would be proud."
-    bar = "█"*(pct//10) + "░"*(10-pct//10)
+    if pct <= 15:   label,emoji,desc = "True Believer","\U0001f64f","You trust your faith fully.\\n\\nTee respects the commitment \u2014 even if he disagrees with every bit of it."
+    elif pct <= 35: label,emoji,desc = "Faithful but Curious","\U0001f914","You believe, but cracks are forming.\\n\\nDangerous territory \u2014 once you start asking, it\'s hard to stop."
+    elif pct <= 55: label,emoji,desc = "On the Fence","\U0001f610","Half in, half out.\\n\\nYou\'re the agnostic who hasn\'t fully admitted it yet."
+    elif pct <= 75: label,emoji,desc = "Closet Atheist","\U0001f440","You don\'t really believe anymore.\\n\\nYou just haven\'t said it out loud yet."
+    elif pct <= 90: label,emoji,desc = "Proud Atheist","\U0001f624","Logic runs your life, not scripture.\\n\\nYou might stay quiet at family dinners \u2014 but inside you are done."
+    else:           label,emoji,desc = "Full Antitheist","\U0001f525","You don\'t just disbelieve \u2014 you think religion is actively harmful.\\n\\nHitchens would be proud."
+    bar = "\u2588"*(pct//10) + "\u2591"*(10-pct//10)
     return pct, label, emoji, desc, bar
 
 def matrix_result(score, total):
     pct = round((score / (total * 5)) * 100)
     label, emoji, desc = get_matrix_result(pct)
-    bar = "█"*(pct//10) + "░"*(10-pct//10)
+    bar = "\u2588"*(pct//10) + "\u2591"*(10-pct//10)
     return pct, label, emoji, desc, bar
 
 def faith_tone_from_pct(pct):
@@ -97,7 +102,7 @@ def matrix_tone_from_pct(pct):
     elif pct <= 70: return "analytical"
     else: return "strategic"
 
-# ── /start ─────────────────────────────────────────────────────────────────────
+# \u2500\u2500 /start \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -111,14 +116,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if get_referral_count(ref_id) >= UNLOCK_THRESHOLD:
                     await context.bot.send_message(
                         chat_id=ref_id,
-                        text="🔓 *Deep Dive unlocked!* Type /deepdive.",
+                        text="\U0001f513 *Deep Dive unlocked!* Type /deepdive.",
                         parse_mode="Markdown")
         except Exception:
             pass
 
     track_user(user.id, user.username, user.first_name)
 
-    # ── Streak check on /start ─────────────────────────────────────────────────
+    # \u2500\u2500 Streak check on /start \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     streak_count, is_new_day = check_and_update_streak(user.id)
     streak_banner = streak_message(streak_count) if is_new_day else ""
 
@@ -127,26 +132,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if already_tested:
         await update.message.reply_text(
             f"{streak_banner}"
-            f"Welcome back {user.first_name} 👋\n\n"
+            f"Welcome back {user.first_name} \U0001f44b\\n\\n"
             "Want to take another test or keep chatting?",
             parse_mode="Markdown",
             reply_markup=mode_keyboard()
         )
     else:
         await update.message.reply_text(
-            f"Hey {user.first_name} 👋\n\n"
-            "*Welcome to Take the Red Pill.* 🔴\n\n"
-            "Two tests. One truth.\n\n"
-            "🛐 *Know Your Faith* — how religious are you really?\n"
-            "🔴 *Know the Matrix* — how aware are you of your own life?\n\n"
-            "Take a test first — it tells me how to talk to you.\n\n"
+            f"Hey {user.first_name} \U0001f44b\\n\\n"
+            "*Welcome to Take the Red Pill.* \U0001f534\\n\\n"
+            "Two tests. One truth.\\n\\n"
+            "\U0001f6d0 *Know Your Faith* \u2014 how religious are you really?\\n"
+            "\U0001f534 *Know the Matrix* \u2014 how aware are you of your own life?\\n\\n"
+            "Take a test first \u2014 it tells me how to talk to you.\\n\\n"
             "Pick one to start:",
             parse_mode="Markdown",
             reply_markup=mode_keyboard()
         )
     return SELECT_MODE
 
-# ── Mode selection ─────────────────────────────────────────────────────────────
+# \u2500\u2500 Mode selection \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -158,7 +163,7 @@ async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if mode == "faith":
         await query.edit_message_text(
-            "🛐 *Know Your Faith*\n\nPick a religion to focus on:",
+            "\U0001f6d0 *Know Your Faith*\\n\\nPick a religion to focus on:",
             parse_mode="Markdown",
             reply_markup=religion_keyboard()
         )
@@ -172,13 +177,13 @@ async def select_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(MATRIX_WELCOME, parse_mode="Markdown")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"*Question 1 of {len(questions)}*\n\n{questions[0]['q']}",
+            text=f"*Question 1 of {len(questions)}*\\n\\n{questions[0][\'q\']}",
             parse_mode="Markdown",
             reply_markup=build_keyboard(0, questions[0]["options"])
         )
         return QUESTION
 
-# ── Religion selection ─────────────────────────────────────────────────────────
+# \u2500\u2500 Religion selection \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def select_religion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -191,18 +196,18 @@ async def select_religion(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "questions": questions, "total": len(questions)
     })
     await query.edit_message_text(
-        f"⚡ *{label} Test*\n\n{n} questions. Be honest 😏",
+        f"\u26a1 *{label} Test*\\n\\n{n} questions. Be honest \U0001f60f",
         parse_mode="Markdown"
     )
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"*Question 1 of {n}*\n\n{questions[0]['q']}",
+        text=f"*Question 1 of {n}*\\n\\n{questions[0][\'q\']}",
         parse_mode="Markdown",
         reply_markup=build_keyboard(0, questions[0]["options"])
     )
     return QUESTION
 
-# ── Answer handler ─────────────────────────────────────────────────────────────
+# \u2500\u2500 Answer handler \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -227,13 +232,13 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if next_qi < len(questions):
         await query.edit_message_text(
-            f"*Question {next_qi+1} of {len(questions)}*\n\n{questions[next_qi]['q']}",
+            f"*Question {next_qi+1} of {len(questions)}*\\n\\n{questions[next_qi][\'q\']}",
             parse_mode="Markdown",
             reply_markup=build_keyboard(next_qi, questions[next_qi]["options"])
         )
         return QUESTION
 
-    # ── Test complete ──────────────────────────────────────────────────────────
+    # \u2500\u2500 Test complete \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     score  = context.user_data["score"]
     total  = context.user_data["total"]
     mode   = context.user_data.get("mode", "faith")
@@ -245,12 +250,12 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tone = matrix_tone_from_pct(pct)
         track_matrix_test(user.id, label, pct, tone)
         closing = {
-            "gentle":     "Ask me anything — I'll start easy and build up.",
+            "gentle":     "Ask me anything \u2014 I\'ll start easy and build up.",
             "analytical": "Ready to go deeper? Ask me anything.",
-            "strategic":  "You already see the game. Let's sharpen the strategy. 🔴",
+            "strategic":  "You already see the game. Let\'s sharpen the strategy. \U0001f534",
         }.get(tone, "Ask me anything.")
 
-        # ── Score comparison (matrix) ──────────────────────────────────────────
+        # \u2500\u2500 Score comparison (matrix) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
         s = get_stats()
         total_tests = s.get("total_matrix_tests", 0)
         leaderboard_line = ""
@@ -261,17 +266,17 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             below = sum(bd.get(l, 0) for l in order_matrix[:idx_l+1])
             pct_rank = max(5, min(95, round((below / total_tests) * 100)))
             leaderboard_line = (
-                f"\n\n📊 You're more aware than *{pct_rank}%* of people "
+                f"\\n\\n\U0001f4ca You\'re more aware than *{pct_rank}%* of people "
                 f"who took this test."
             )
 
         result_text = (
-            f"*Your Matrix Score: {label} {emoji}*\n\n"
-            f"{bar}  *{pct}%*\n\n"
-            f"{desc}\n\n"
+            f"*Your Matrix Score: {label} {emoji}*\\n\\n"
+            f"{bar}  *{pct}%*\\n\\n"
+            f"{desc}\\n\\n"
             f"_{closing}_"
-            f"{leaderboard_line}\n\n"
-            f"🔗 /referral  ⭐ /donate"
+            f"{leaderboard_line}\\n\\n"
+            f"\U0001f517 /referral  \u2b50 /donate"
         )
         card_subtitle = "Know the Matrix"
     else:
@@ -281,12 +286,12 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         complete_onboarding(user.id, religion, score, total, label)
         track_faith_test(user.id, label, pct, religion, tone)
         closing = {
-            "gentle":      "Curious about something? Just ask — I'll start easy 😊",
+            "gentle":      "Curious about something? Just ask \u2014 I\'ll start easy \U0001f60a",
             "analytical":  "Ready to go deeper? Ask me anything.",
-            "provocative": "You already know the game. Zero filter from here. 🔥",
+            "provocative": "You already know the game. Zero filter from here. \U0001f525",
         }.get(tone, "Ask me anything.")
 
-        # ── Score comparison (faith) ───────────────────────────────────────────
+        # \u2500\u2500 Score comparison (faith) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
         s = get_stats()
         total_tests = s.get("total_faith_tests", 0)
         leaderboard_line = ""
@@ -296,27 +301,25 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             idx_l = order_faith.index(label) if label in order_faith else 0
             below = sum(bd.get(l, 0) for l in order_faith[:idx_l+1])
             pct_rank = max(5, min(95, round((below / total_tests) * 100)))
-            # ← KEY CHANGE: wording now matches your spec
-            leaderboard_line = (
-                f"\n\n📊 You're more atheist than *{pct_rank}%* of people "
+            leaderboard_line = ( 
+                f"\\n\\n\U0001f4ca You\'re more atheist than *{pct_rank}%* of people "
                 f"who took this test."
             )
 
         result_text = (
-            f"*Your Faith Score: {label} {emoji}*\n\n"
-            f"{bar}  *{pct}%*\n\n"
-            f"{desc}\n\n"
+            f"*Your Faith Score: {label} {emoji}*\\n\\n"
+            f"{bar}  *{pct}%*\\n\\n"
+            f"{desc}\\n\\n"
             f"_{closing}_"
-            f"{leaderboard_line}\n\n"
-            f"🔗 /referral  ⭐ /donate"
+            f"{leaderboard_line}\\n\\n"
+            f"\U0001f517 /referral  \u2b50 /donate"
         )
         card_subtitle = "Know Your Faith"
 
     context.user_data["last_pct"]   = pct
     context.user_data["last_label"] = label
     context.user_data["last_tone"]  = tone
-
-    # Save to agent profile
+ 
     profile_update = {
         "username": uname,
         f"{mode}_label": label,
@@ -329,18 +332,18 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.edit_message_text(result_text, parse_mode="Markdown")
 
-    # Auto card
+    # \u2500\u2500 Auto card \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     try:
         await context.bot.send_chat_action(
             chat_id=update.effective_chat.id, action="upload_photo")
         card = await generate_result_card(
             context.bot, user.id, uname, pct, label, subtitle=card_subtitle)
-        other_mode = "Matrix 🔴" if mode == "faith" else "Faith 🛐"
+        other_mode = "Matrix \U0001f534" if mode == "faith" else "Faith \U0001f6d0"
         await context.bot.send_photo(
             chat_id=update.effective_chat.id, photo=card,
             caption=(
-                f"*{label}* — {pct}%\n\n"
-                f"📸 Screenshot and share — tag @teetheredpill\n\n"
+                f"*{label}* \u2014 {pct}%\\n\\n"
+                f"\U0001f4f8 Screenshot and share \u2014 tag @teetheredpill\\n\\n"
                 f"Want to try the *{other_mode} test* too? Type /test"
             ),
             parse_mode="Markdown"
@@ -348,25 +351,25 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Card: {e}")
 
-    # Ask for location after first test if not set
+    # \u2500\u2500 Ask for location after first test if not set \u2014 with Skip button \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     try:
         loc = get_location(user.id)
         if not loc.get("country"):
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=(
-                    "🌍 One quick thing — where are you from?\n\n"
-                    "Just type your country or city.\n"
-                    "I use it to make examples more relevant to you.\n\n"
+                    "\U0001f30d One quick thing \u2014 where are you from?\\n\\n"
+                    "Just type your country or city.\\n"
+                    "I use it to make examples more relevant to you.\\n\\n"
                     "_(You can also do this anytime with /location)_"
                 ),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
+                reply_markup=LOCATION_SKIP_KB
             )
             context.user_data["awaiting_location"] = True
     except Exception:
         pass
-
-    # Preserve awaiting_location across the clear
+ 
     ask_location = context.user_data.get("awaiting_location", False)
     context.user_data.clear()
     context.user_data["onboarded"] = True
@@ -382,33 +385,43 @@ async def cancel_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Test cancelled. Type /start to choose a mode.")
     return ConversationHandler.END
 
-# ── Commands ───────────────────────────────────────────────────────────────────
+# \u2500\u2500 Skip location callback \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+async def skip_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    context.user_data["awaiting_location"] = False
+    await query.edit_message_text(
+        "No worries \u2014 you can always set it later with /location \U0001f30d"
+    )
+
+# \u2500\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "*Commands:*\n\n"
-        "/start — Choose a mode\n"
-        "/test — Retake a test\n"
-        "/mode — Check your current mode\n"
-        "/switch — Switch between Faith and Matrix\n"
-        "/location — Set your location for personalised examples\n"
-        "/help — This menu\n"
-        "/reset — Clear conversation\n"
-        "/topics — What Tee knows\n"
-        "/referral — Your invite link\n"
-        "/deepdive — Unlock uncensored mode\n"
-        "/donate — Support the bot\n\n"
-        "*Modes:*\n"
-        "🛐 Know Your Faith — religion test\n"
-        "🔴 Know the Matrix — life awareness test\n\n"
-        "📢 Join the channel: @teetheredpill",
+        "*Commands:*\\n\\n"
+        "/start \u2014 Choose a mode\\n"
+        "/test \u2014 Retake a test\\n"
+        "/mode \u2014 Check your current mode\\n"
+        "/switch \u2014 Switch between Faith and Matrix\\n"
+        "/location \u2014 Set your location for personalised examples\\n"
+        "/help \u2014 This menu\\n"
+        "/reset \u2014 Clear conversation\\n"
+        "/topics \u2014 What Tee knows\\n"
+        "/referral \u2014 Your invite link\\n"
+        "/deepdive \u2014 Unlock uncensored mode\\n"
+        "/donate \u2014 Support the bot\\n\\n"
+        "*Modes:*\\n"
+        "\U0001f6d0 Know Your Faith \u2014 religion test\\n"
+        "\U0001f534 Know the Matrix \u2014 life awareness test\\n\\n"
+        "\U0001f4e2 Join the channel: @teetheredpill",
         parse_mode="Markdown"
     )
 
 async def topics_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not context.user_data.get("onboarded", False) and not is_onboarded(user.id):
-        await update.message.reply_text("Take the test first 👉 /start")
+        await update.message.reply_text("Take the test first \U0001f449 /start")
         return
     await update.message.reply_text(TOPICS_MESSAGE, parse_mode="Markdown")
 
@@ -417,7 +430,7 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = context.user_data.get("mode") or get_mode(user.id)
     agent.reset_history(user.id, mode)
     await update.message.reply_text(
-        f"Cleared {'Matrix' if mode == 'matrix' else 'Faith'} history. 🧹 What's on your mind?"
+        f"Cleared {\'Matrix\' if mode == \'matrix\' else \'Faith\'} history. \U0001f9f9 What\'s on your mind?"
     )
 
 async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -432,10 +445,9 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     link = get_referral_link(BOT_USERNAME, user.id)
     count = get_referral_count(user.id)
     rem = max(0, UNLOCK_THRESHOLD - count)
-    status = "🔓 *Deep Dive unlocked!* /deepdive" if is_unlocked(
+    status = "\U0001f513 *Deep Dive unlocked!* /deepdive" if is_unlocked(
         user.id) else f"Need *{rem} more* to unlock."
-
-    # Personalised challenge using last test result
+ 
     profile = agent.get_user_profile(user.id)
     fl = profile.get("faith_label")
     fs = profile.get("faith_score")
@@ -444,25 +456,25 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if fl and fs:
         challenge = (
-            f"\n\n_Forward this to someone:_\n"
-            f"_I just scored {fs}% on the Faith test 🔴_\n"
-            f"_They called me {fl} 😏_\n"
-            f"_Think you can beat me? →_ {link}"
+            f"\\n\\n_Forward this to someone:_\\n"
+            f"_I just scored {fs}% on the Faith test \U0001f534_\\n"
+            f"_They called me {fl} \U0001f60f_\\n"
+            f"_Think you can beat me? \u2192_ {link}"
         )
     elif ml and ms:
         challenge = (
-            f"\n\n_Forward this to someone:_\n"
-            f"_I just scored {ms}% on the Matrix test 🔴_\n"
-            f"_They called me {ml} 😏_\n"
-            f"_Think you can beat me? →_ {link}"
+            f"\\n\\n_Forward this to someone:_\\n"
+            f"_I just scored {ms}% on the Matrix test \U0001f534_\\n"
+            f"_They called me {ml} \U0001f60f_\\n"
+            f"_Think you can beat me? \u2192_ {link}"
         )
     else:
-        challenge = f"\n\n_Send this to a friend:_\n_Take the Red Pill test → {link}_"
+        challenge = f"\\n\\n_Send this to a friend:_\\n_Take the Red Pill test \u2192 {link}_"
 
     await update.message.reply_text(
-        f"🔗 *Your referral link:*\n`{link}`\n\n"
-        f"Friends joined: *{count}/{UNLOCK_THRESHOLD}*\n\n"
-        f"{status}\n\n"
+        f"\U0001f517 *Your referral link:*\\n`{link}`\\n\\n"
+        f"Friends joined: *{count}/{UNLOCK_THRESHOLD}*\\n\\n"
+        f"{status}\\n\\n"
         f"When {UNLOCK_THRESHOLD} friends join the *Deep Dive* unlocks."
         f"{challenge}",
         parse_mode="Markdown"
@@ -473,35 +485,35 @@ async def deepdive_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         count = get_referral_count(update.effective_user.id)
         link = get_referral_link(BOT_USERNAME, update.effective_user.id)
         await update.message.reply_text(
-            f"🔒 *Deep Dive locked.*\n\nNeed *{UNLOCK_THRESHOLD-count} more* friends.\n\n`{link}`",
+            f"\U0001f512 *Deep Dive locked.*\\n\\nNeed *{UNLOCK_THRESHOLD-count} more* friends.\\n\\n`{link}`",
             parse_mode="Markdown")
         return
     agent.set_user_profile(update.effective_user.id, {"deep_dive": True})
     await update.message.reply_text(
-        "🔥 *Deep Dive — Zero Filter Unlocked*\n\n"
-        "You earned this.\n\n"
-        "Ask me anything:\n"
-        "• How Islam actually spread by the sword\n"
-        "• The men who wrote the Bible and why\n"
-        "• Why African religion is a colonial wound that never healed\n"
-        "• Scientology and what it reveals about ALL religion\n"
-        "• The sexual politics buried in both holy books\n"
-        "• Life traps most people never escape\n\n"
-        "Zero filter. Go ahead. 🔴",
+        "\U0001f525 *Deep Dive \u2014 Zero Filter Unlocked*\\n\\n"
+        "You earned this.\\n\\n"
+        "Ask me anything:\\n"
+        "\u2022 How Islam actually spread by the sword\\n"
+        "\u2022 The men who wrote the Bible and why\\n"
+        "\u2022 Why African religion is a colonial wound that never healed\\n"
+        "\u2022 Scientology and what it reveals about ALL religion\\n"
+        "\u2022 The sexual politics buried in both holy books\\n"
+        "\u2022 Life traps most people never escape\\n\\n"
+        "Zero filter. Go ahead. \U0001f534",
         parse_mode="Markdown"
     )
 
 async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "⭐ *Support Take the Red Pill*\n\n"
-        "If this bot made you think — or made your religious friend angry — it did its job. 😏\n\n"
-        "Support keeps it running, ad-free, and unfiltered.\n\n"
-        "*How to send Telegram Stars:*\n"
-        "1. Tap the attachment icon (📎) in this chat\n"
-        "2. Select ⭐ Stars\n"
-        "3. Choose an amount and send\n\n"
-        "Or share the bot with one person who needs the red pill. That counts too. 🔴\n\n"
-        "👉 t.me/honestteebot",
+        "\u2b50 *Support Take the Red Pill*\\n\\n"
+        "If this bot made you think \u2014 or made your religious friend angry \u2014 it did its job. \U0001f60f\\n\\n"
+        "Support keeps it running, ad-free, and unfiltered.\\n\\n"
+        "*How to send Telegram Stars:*\\n"
+        "1. Tap the attachment icon (\U0001f4ce) in this chat\\n"
+        "2. Select \u2b50 Stars\\n"
+        "3. Choose an amount and send\\n\\n"
+        "Or share the bot with one person who needs the red pill. That counts too. \U0001f534\\n\\n"
+        "\U0001f449 t.me/honestteebot",
         parse_mode="Markdown"
     )
 
@@ -509,21 +521,21 @@ async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     mode = context.user_data.get("mode") or get_mode(user.id)
     other = "matrix" if mode == "faith" else "faith"
-    other_name = "Know the Matrix 🔴" if other == "matrix" else "Know Your Faith 🛐"
-    mode_name = "Know Your Faith 🛐" if mode == "faith" else "Know the Matrix 🔴"
+    other_name = "Know the Matrix \U0001f534" if other == "matrix" else "Know Your Faith \U0001f6d0"
+    mode_name = "Know Your Faith \U0001f6d0" if mode == "faith" else "Know the Matrix \U0001f534"
     can_switch = can_switch_mode(user.id)
 
     if can_switch:
-        switch_text = f"✅ You can switch.\n\nType /switch to move to *{other_name}*"
+        switch_text = f"\u2705 You can switch.\\n\\nType /switch to move to *{other_name}*"
     else:
         switch_text = (
-            f"🔒 To switch you need to complete *both tests* first.\n\n"
-            f"You haven't taken the *{other_name}* test yet.\n"
+            f"\U0001f512 To switch you need to complete *both tests* first.\\n\\n"
+            f"You haven\'t taken the *{other_name}* test yet.\\n"
             f"Type /test to take it."
         )
     await update.message.reply_text(
-        f"*Current mode: {mode_name}*\n\n"
-        f"All your messages are answered in this mode.\n\n"
+        f"*Current mode: {mode_name}*\\n\\n"
+        f"All your messages are answered in this mode.\\n\\n"
         f"{switch_text}",
         parse_mode="Markdown"
     )
@@ -533,72 +545,73 @@ async def switch_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = context.user_data.get("mode") or get_mode(user.id)
 
     if not can_switch_mode(user.id):
-        other = "Know the Matrix 🔴" if mode == "faith" else "Know Your Faith 🛐"
+        other = "Know the Matrix \U0001f534" if mode == "faith" else "Know Your Faith \U0001f6d0"
         await update.message.reply_text(
-            f"🔒 *Mode switching is locked.*\n\n"
-            f"Take the *{other}* test first.\n\nType /test to begin.",
+            f"\U0001f512 *Mode switching is locked.*\\n\\n"
+            f"Take the *{other}* test first.\\n\\nType /test to begin.",
             parse_mode="Markdown"
         )
         return
 
     new_mode = "matrix" if mode == "faith" else "faith"
-    new_name = "Know the Matrix 🔴" if new_mode == "matrix" else "Know Your Faith 🛐"
+    new_name = "Know the Matrix \U0001f534" if new_mode == "matrix" else "Know Your Faith \U0001f6d0"
     context.user_data["mode"] = new_mode
     context.user_data["last_tone"] = "analytical"
     save_mode(user.id, new_mode)
 
     await update.message.reply_text(
-        f"✅ *Switched to {new_name}*\n\n"
-        f"All your messages will now be answered in this mode.\n\n"
+        f"\u2705 *Switched to {new_name}*\\n\\n"
+        f"All your messages will now be answered in this mode.\\n\\n"
         f"Type /mode anytime to check or switch again.",
         parse_mode="Markdown"
     )
 
 async def location_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🌍 *Where are you from?*\n\n"
-        "Just type your country or city — I'll use it to make examples more relevant to you.\n\n"
+        "\U0001f30d *Where are you from?*\\n\\n"
+        "Just type your country or city \u2014 I\'ll use it to make examples more relevant to you.\\n\\n"
         "Example: _Nigeria_, _Ghana_, _Israel_, _Mecca_, _United States_, _Lagos Nigeria_, _Texas US_",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=LOCATION_SKIP_KB
     )
     context.user_data["awaiting_location"] = True
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ADMIN_ID and update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("🔒 Admin only.")
+        await update.message.reply_text("\U0001f512 Admin only.")
         return
     s = get_stats()
     if "error" in s:
-        await update.message.reply_text(f"Error: {s['error']}")
+        await update.message.reply_text(f"Error: {s[\'error\']}")
         return
-    faith_bd   = "\n".join(f"  {k}: {v}" for k,v in sorted(s.get("faith_breakdown",{}).items(), key=lambda x:-x[1]))
-    matrix_bd  = "\n".join(f"  {k}: {v}" for k,v in sorted(s.get("matrix_breakdown",{}).items(), key=lambda x:-x[1]))
-    religion_bd= "\n".join(f"  {k}: {v}" for k,v in sorted(s.get("religion_breakdown",{}).items(), key=lambda x:-x[1]))
+    faith_bd   = "\\n".join(f"  {k}: {v}" for k,v in sorted(s.get("faith_breakdown",{}).items(), key=lambda x:-x[1]))
+    matrix_bd  = "\\n".join(f"  {k}: {v}" for k,v in sorted(s.get("matrix_breakdown",{}).items(), key=lambda x:-x[1]))
+    religion_bd= "\\n".join(f"  {k}: {v}" for k,v in sorted(s.get("religion_breakdown",{}).items(), key=lambda x:-x[1]))
     recent = get_recent_users(5)
-    recent_text = "\n".join(
-        f"  • {u.get('first_name','?')} | Faith:{u.get('faith_last_score','?')}% | Matrix:{u.get('matrix_last_score','?')}%"
+    recent_text = "\\n".join(
+        f"  \u2022 {u.get(\'first_name\',\'?\')} | Faith:{u.get(\'faith_last_score\',\'?\')}% | Matrix:{u.get(\'matrix_last_score\',\'?\')}%"
         for u in recent
     )
     total_tests = s.get("total_faith_tests",0) + s.get("total_matrix_tests",0)
     await update.message.reply_text(
-        f"📊 *Take the Red Pill — Stats*\n"
-        f"━━━━━━━━━━━━━━━\n\n"
-        f"👥 Total users: *{s['total_users']}*\n"
-        f"🆕 New today: *{s['new_today']}*\n"
-        f"📅 Active 7 days: *{s['active_7d']}*\n"
-        f"💬 Total messages: *{s['total_messages']}*\n\n"
-        f"🧪 Total tests: *{total_tests}*\n"
-        f"🛐 Faith tests: *{s['total_faith_tests']}*\n"
-        f"🔴 Matrix tests: *{s['total_matrix_tests']}*\n"
-        f"🔥 Deep Dive unlocked: *{s.get('deep_dive_unlocked', 0)}*\n\n"
-        f"*Faith breakdown:*\n{faith_bd or '  none yet'}\n\n"
-        f"*Matrix breakdown:*\n{matrix_bd or '  none yet'}\n\n"
-        f"*Religion picks:*\n{religion_bd or '  none yet'}\n\n"
-        f"*Recent users:*\n{recent_text or '  none yet'}",
+        f"\U0001f4ca *Take the Red Pill \u2014 Stats*\\n"
+        f"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n"
+        f"\U0001f465 Total users: *{s[\'total_users\']}*\\n"
+        f"\U0001f195 New today: *{s[\'new_today\']}*\\n"
+        f"\U0001f4c5 Active 7 days: *{s[\'active_7d\']}*\\n"
+        f"\U0001f4ac Total messages: *{s[\'total_messages\']}*\\n\\n"
+        f"\U0001f9ea Total tests: *{total_tests}*\\n"
+        f"\U0001f6d0 Faith tests: *{s[\'total_faith_tests\']}*\\n"
+        f"\U0001f534 Matrix tests: *{s[\'total_matrix_tests\']}*\\n"
+        f"\U0001f525 Deep Dive unlocked: *{s.get(\'deep_dive_unlocked\', 0)}*\\n\\n"
+        f"*Faith breakdown:*\\n{faith_bd or \'  none yet\'}\\n\\n"
+        f"*Matrix breakdown:*\\n{matrix_bd or \'  none yet\'}\\n\\n"
+        f"*Religion picks:*\\n{religion_bd or \'  none yet\'}\\n\\n"
+        f"*Recent users:*\\n{recent_text or \'  none yet\'}",
         parse_mode="Markdown"
     )
 
-# ── Message handler ────────────────────────────────────────────────────────────
+# \u2500\u2500 Message handler \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -608,7 +621,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     track_user(user.id, user.username, user.first_name)
     track_message(user.id)
 
-    # ── LOCATION INPUT — must be checked FIRST before anything else ───────────
+    # \u2500\u2500 LOCATION INPUT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    # Checked first. Tapping Skip clears the flag via callback \u2014 won\'t swallow other messages.
     if context.user_data.get("awaiting_location"):
         context.user_data["awaiting_location"] = False
         parts = msg.split(",")
@@ -618,21 +632,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         agent.set_user_profile(user.id, {"country": country, "city": city})
         loc_display = f"{city}, {country}" if city else country
         await update.message.reply_text(
-            f"✅ Got it — *{loc_display}* 🌍\n\n"
-            f"I'll use that for examples from now on.",
+            f"\u2705 Got it \u2014 *{loc_display}* \U0001f30d\\n\\nI\'ll use that for examples from now on.",
             parse_mode="Markdown"
         )
         return
 
-    # ── ONBOARDING GATE ───────────────────────────────────────────────────────
+    # \u2500\u2500 ONBOARDING GATE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     already_tested = context.user_data.get("onboarded", False) or is_onboarded(user.id)
     if not already_tested:
         await update.message.reply_text(
-            "Hey 👋 Take the test first — it tells me how to talk to you.\n\nType /start to begin 🔴"
+            "Hey \U0001f44b Take the test first \u2014 it tells me how to talk to you.\\n\\nType /start to begin \U0001f534"
         )
         return
 
-    # ── STREAK CHECK — first message of the day ───────────────────────────────
+    # \u2500\u2500 STREAK CHECK \u2014 first message of the day \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     streak_count, is_new_day = check_and_update_streak(user.id)
     if is_new_day and streak_count >= 2:
         await update.message.reply_text(
@@ -642,7 +655,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
-    # ── RESTORE MODE ──────────────────────────────────────────────────────────
+    # \u2500\u2500 RESTORE MODE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     saved_mode = get_mode(user.id)
     mode = context.user_data.get("mode") or saved_mode
     if saved_mode and saved_mode != "faith":
@@ -651,7 +664,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tone = context.user_data.get("last_tone", "analytical")
     logger.info(f"[{user.first_name}] mode={mode} tone={tone}")
 
-    # ── SYNC LOCATION to agent ────────────────────────────────────────────────
+    # \u2500\u2500 SYNC LOCATION to agent \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     loc = get_location(user.id)
     if loc.get("country"):
         agent.set_user_profile(user.id, {
@@ -659,73 +672,73 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "city": loc.get("city", "")
         })
 
-    # ── BUILD SYSTEM PROMPT ───────────────────────────────────────────────────
+    # \u2500\u2500 BUILD SYSTEM PROMPT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     user_profile  = agent.get_user_profile(user.id)
     has_deep_dive = user_profile.get("deep_dive", False) or is_unlocked(user.id)
 
     if mode == "matrix":
         base_system = (
-            "YOU ARE IN: KNOW THE MATRIX MODE\n"
-            "DO NOT discuss religion, God, Islam, Christianity, or faith.\n"
+            "YOU ARE IN: KNOW THE MATRIX MODE\\n"
+            "DO NOT discuss religion, God, Islam, Christianity, or faith.\\n"
             "You are a life strategist and mentor. Focus ONLY on life awareness, "
-            "social conditioning, time, purpose, success, and mindset.\n\n"
-            + MATRIX_SYSTEM_PROMPT + "\n\n" + get_matrix_tone_prompt(tone)
+            "social conditioning, time, purpose, success, and mindset.\\n\\n"
+            + MATRIX_SYSTEM_PROMPT + "\\n\\n" + get_matrix_tone_prompt(tone)
         )
         if has_deep_dive:
-            base_system += "\n\n" + MATRIX_DEEP_DIVE_PROMPT
+            base_system += "\\n\\n" + MATRIX_DEEP_DIVE_PROMPT
     else:
         base_system = (
-            "YOU ARE IN: KNOW YOUR FAITH MODE\n"
-            "Focus on religion, God, Islam, Christianity, Hinduism, and related philosophy.\n\n"
-            + ATHEISM_SYSTEM_PROMPT + "\n\n" + get_tone_prompt(tone)
+            "YOU ARE IN: KNOW YOUR FAITH MODE\\n"
+            "Focus on religion, God, Islam, Christianity, Hinduism, and related philosophy.\\n\\n"
+            + ATHEISM_SYSTEM_PROMPT + "\\n\\n" + get_tone_prompt(tone)
         )
         if has_deep_dive:
-            base_system += "\n\n" + DEEP_DIVE_PROMPT
+            base_system += "\\n\\n" + DEEP_DIVE_PROMPT
 
-    # ── GREETING ─────────────────────────────────────────────────────────────
+    # \u2500\u2500 GREETING \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if low in GREETINGS:
         if agent.has_history(user.id, mode):
             topic = agent.get_last_topic_summary(user.id, mode)
             short = topic[:60] + "..." if len(topic) > 60 else topic
             await update.message.reply_text(
-                f"Hey 👋\n\nWe were talking about: _{short}_\n\nWant to continue?",
+                f"Hey \U0001f44b\\n\\nWe were talking about: _{short}_\\n\\nWant to continue?",
                 parse_mode="Markdown"
             )
         else:
-            await update.message.reply_text("Hey 👋 What's on your mind?")
+            await update.message.reply_text("Hey \U0001f44b What\'s on your mind?")
         return
 
-    # ── REACTION / SHORT REPLY ────────────────────────────────────────────────
+    # \u2500\u2500 REACTION / SHORT REPLY \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     if low in REACTIONS or len(msg.split()) <= 4:
         last = agent.get_last_bot_message(user.id, mode)
         if last:
             short_ctx = last[:300] + "..." if len(last) > 300 else last
             prompt = (
-                f"The user replied '{msg}' to what you just said.\n"
-                f"Your last message was: '{short_ctx}'\n\n"
+                f"The user replied \'{msg}\' to what you just said.\\n"
+                f"Your last message was: \'{short_ctx}\'\\n\\n"
                 f"Continue building on EXACTLY that point. "
-                f"Don't switch topics. Acknowledge their reaction first, "
+                f"Don\'t switch topics. Acknowledge their reaction first, "
                 f"then go one layer deeper. Keep it short and punchy."
             )
             reply = agent.chat_with_system(user.id, prompt, system_override=base_system, mode=mode)
             await _send(update, reply)
             return
 
-    # ── NORMAL MESSAGE ────────────────────────────────────────────────────────
+    # \u2500\u2500 NORMAL MESSAGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     profile = increment_interactions(user.id)
     new_tone = profile.get("tone", tone)
     if new_tone != tone:
         context.user_data["last_tone"] = new_tone
         if mode == "matrix":
             base_system = (
-                "YOU ARE IN: KNOW THE MATRIX MODE\n"
-                "DO NOT discuss religion, God, Islam, Christianity, or faith.\n\n"
-                + MATRIX_SYSTEM_PROMPT + "\n\n" + get_matrix_tone_prompt(new_tone)
+                "YOU ARE IN: KNOW THE MATRIX MODE\\n"
+                "DO NOT discuss religion, God, Islam, Christianity, or faith.\\n\\n"
+                + MATRIX_SYSTEM_PROMPT + "\\n\\n" + get_matrix_tone_prompt(new_tone)
             )
         else:
             base_system = (
-                "YOU ARE IN: KNOW YOUR FAITH MODE\n\n"
-                + ATHEISM_SYSTEM_PROMPT + "\n\n" + get_tone_prompt(new_tone)
+                "YOU ARE IN: KNOW YOUR FAITH MODE\\n\\n"
+                + ATHEISM_SYSTEM_PROMPT + "\\n\\n" + get_tone_prompt(new_tone)
             )
 
     reply = agent.chat_with_system(user.id, msg, system_override=base_system, mode=mode)
@@ -744,11 +757,11 @@ async def _send(update: Update, text: str):
 async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.inline_query.answer([
         InlineQueryResultArticle(
-            id="1", title="Share Take the Red Pill 🔴",
+            id="1", title="Share Take the Red Pill \U0001f534",
             description="Know Your Faith + Know the Matrix",
             input_message_content=InputTextMessageContent(
-                f"🔴 Take the Red Pill test → t.me/{BOT_USERNAME}\n\n"
-                f"Know Your Faith + Know the Matrix 😏"
+                f"\U0001f534 Take the Red Pill test \u2192 t.me/{BOT_USERNAME}\\n\\n"
+                f"Know Your Faith + Know the Matrix \U0001f60f"
             )
         ),
     ], cache_time=10)
@@ -764,7 +777,7 @@ async def reengagement_job(context: ContextTypes.DEFAULT_TYPE):
     supabase_key = os.getenv("SUPABASE_KEY", "")
     await send_reengagement_messages(context.bot, supabase_url, supabase_key)
 
-# ── Main ───────────────────────────────────────────────────────────────────────
+# \u2500\u2500 Main \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async def run_bot():
     if not TELEGRAM_BOT_TOKEN:
@@ -803,6 +816,8 @@ async def run_bot():
         app.add_handler(CommandHandler(cmd, fn))
 
     app.add_handler(InlineQueryHandler(inline_query))
+    # skip_location must be registered before the generic message handler
+    app.add_handler(CallbackQueryHandler(skip_location, pattern="^skip_location$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
@@ -810,13 +825,12 @@ async def run_bot():
         try:
             if app.job_queue:
                 app.job_queue.run_daily(daily_job, time=dtime(9, 0, 0))
-                print(f"[OK] Daily broadcast → {BROADCAST_CH}")
+                print(f"[OK] Daily broadcast \u2192 {BROADCAST_CH}")
             else:
                 print("[WARN] JobQueue not available")
         except Exception as e:
             print(f"[WARN] Broadcast error: {e}")
-
-    # Reengagement pings — runs daily at 10am UTC
+ 
     try:
         if app.job_queue:
             app.job_queue.run_daily(reengagement_job, time=dtime(10, 0, 0))
@@ -824,7 +838,7 @@ async def run_bot():
     except Exception as e:
         print(f"[WARN] Reengagement setup error: {e}")
 
-    print("Take the Red Pill bot is live.\n")
+    print("Take the Red Pill bot is live.\\n")
     async with app:
         await app.start()
         await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
@@ -842,9 +856,9 @@ def main():
             print(f"[RUN] Starting bot loop (attempt {retry + 1})")
             asyncio.run(run_bot())
         except KeyboardInterrupt:
-            print("\n[STOP] Stopped by user.")
+            print("\\n[STOP] Stopped by user.")
             break
-        except Conflict: 
+        except Conflict:
             print("[CONFLICT] Another instance detected. Waiting 15s for it to stop...")
             time.sleep(15)
             retry = 0
@@ -855,9 +869,10 @@ def main():
             print(f"[RETRY] Restarting in {wait}s...")
             time.sleep(wait)
         else:
-            print("[EXIT] Bot exited cleanly — restarting in 5s...")
+            print("[EXIT] Bot exited cleanly \u2014 restarting in 5s...")
             time.sleep(5)
 
 if __name__ == "__main__":
     import time
     main()
+'''
