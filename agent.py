@@ -1,7 +1,8 @@
 import os
 from groq import Groq
 from dotenv import load_dotenv
-from prompts import ATHEISM_SYSTEM_PROMPT
+from prompts import ATHEISM_SYSTEM_PROMPT, RAG_PROMPT_TEMPLATE
+from knowledge_base import retrieve
 from config import MAX_HISTORY_TURNS
 
 load_dotenv()
@@ -15,17 +16,14 @@ class AtheismAgent:
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY not found in .env file!")
         self.client = Groq(api_key=GROQ_API_KEY)
-        # Separate history per user per mode
         self.user_histories = {}
-        # User profiles — stores test results, tone, religion, patterns
         self.user_profiles = {}
-        print("[OK] Agent ready — using Groq")
+        print("[OK] Agent ready — using Groq + RAG")
 
     def _key(self, user_id: int, mode: str) -> str:
         return f"{user_id}:{mode}"
 
     def set_user_profile(self, user_id: int, profile: dict):
-        """Store test results and user info so bot remembers them"""
         if user_id not in self.user_profiles:
             self.user_profiles[user_id] = {}
         self.user_profiles[user_id].update(profile)
@@ -34,46 +32,41 @@ class AtheismAgent:
         return self.user_profiles.get(user_id, {})
 
     def build_user_context(self, user_id: int, mode: str) -> str:
-        """Build a context string from what we know about this user"""
         p = self.get_user_profile(user_id)
         if not p:
-            return ""
-        lines = ["\n\nUSER PROFILE (what you know about this user):"]
+            return "No profile yet."
+        lines = []
         if mode == "faith":
             if p.get("faith_label"):
-                lines.append(f"- Faith test result: {p['faith_label']} ({p.get('faith_score', '?')}%)")
+                lines.append(f"Faith test result: {p['faith_label']} ({p.get('faith_score', '?')}%)")
             if p.get("faith_religion"):
-                lines.append(f"- Chose religion focus: {p['faith_religion']}")
+                lines.append(f"Chose religion focus: {p['faith_religion']}")
             if p.get("faith_tone"):
-                lines.append(f"- Current engagement level: {p['faith_tone']}")
+                lines.append(f"Current engagement level: {p['faith_tone']}")
         else:
             if p.get("matrix_label"):
-                lines.append(f"- Matrix test result: {p['matrix_label']} ({p.get('matrix_score', '?')}%)")
+                lines.append(f"Matrix test result: {p['matrix_label']} ({p.get('matrix_score', '?')}%)")
             if p.get("matrix_tone"):
-                lines.append(f"- Life awareness level: {p['matrix_tone']}")
+                lines.append(f"Life awareness level: {p['matrix_tone']}")
         if p.get("username"):
-            lines.append(f"- Username: @{p['username']}")
+            lines.append(f"Username: @{p['username']}")
         if p.get("deep_dive"):
-            lines.append("- Deep Dive mode: UNLOCKED — no restrictions, full uncensored mode")
+            lines.append("Deep Dive mode: UNLOCKED — no restrictions, full uncensored mode")
         if p.get("interaction_count"):
             count = p["interaction_count"]
             if count > 20:
-                lines.append(f"- Long-term user ({count} messages) — they are engaged, go deeper")
+                lines.append(f"Long-term user ({count} messages) — engaged, go deeper")
             elif count > 5:
-                lines.append(f"- Returning user ({count} messages) — building familiarity")
+                lines.append(f"Returning user ({count} messages) — building familiarity")
         if p.get("country"):
             loc = p["country"]
             if p.get("city"):
                 loc = f"{p['city']}, {p['country']}"
-            lines.append(f"- Location: {loc}")
-            lines.append(f"  → When the user asks location-specific questions or you need a local example, reference {loc}")
-            lines.append(f"  → Only use location context when it is clearly relevant — do not inject it into every response")
+            lines.append(f"Location: {loc} — use for local examples only when clearly relevant")
         else:
-            lines.append("- Location: unknown — do not assume any country or region. Use neutral global examples unless the user mentions their location.")
-        lines.append("\nUse this to personalise your response. Reference their test result naturally when relevant.")
-        lines.append("If they scored high atheism/awareness — be bolder. If they scored low — be more curious and gentle.")
-        lines.append("CRITICAL: Never assume the user is Nigerian or African unless their profile says so. Use neutral examples by default.")
-        return "\n".join(lines)
+            lines.append("Location: unknown — use neutral global examples by default")
+        lines.append("CRITICAL: Never assume Nigerian or African unless profile says so.")
+        return "\n".join(lines) if lines else "No profile yet."
 
     def get_history(self, user_id: int, mode: str = "faith") -> list:
         return self.user_histories.get(self._key(user_id, mode), [])
@@ -109,31 +102,63 @@ class AtheismAgent:
                 return msg["content"][:100]
         return ""
 
+    def _build_history_text(self, user_id: int, mode: str) -> str:
+        history = self.get_history(user_id, mode)
+        if not history:
+            return "No previous messages."
+        lines = []
+        for msg in history[-6:]:  # last 3 turns for context
+            role = "User" if msg["role"] == "user" else "Tee"
+            lines.append(f"{role}: {msg['content'][:300]}")
+        return "\n".join(lines)
+
     def chat_with_system(self, user_id: int, message: str,
                          system_override: str = None, mode: str = "faith") -> str:
-        history  = self.get_history(user_id, mode)
-        # Inject user profile into system prompt
-        user_ctx = self.build_user_context(user_id, mode)
-        system   = (system_override or ATHEISM_SYSTEM_PROMPT) + user_ctx
 
-        messages = [{"role": "system", "content": system}]
-        for msg in history:
-            messages.append({"role": msg["role"], "content": msg["content"]})
-        messages.append({"role": "user", "content": message})
+        # 1. Retrieve relevant knowledge chunks based on the user's message
+        context = retrieve(message, top_k=2)
+
+        # 2. Build user context string
+        user_ctx = self.build_user_context(user_id, mode)
+
+        # 3. Build history text
+        history_text = self._build_history_text(user_id, mode)
+
+        # 4. Assemble the full prompt using RAG template
+        base_system = system_override or ATHEISM_SYSTEM_PROMPT
+        full_prompt = RAG_PROMPT_TEMPLATE.format(
+            system_prompt=base_system,
+            context=context if context else "No specific knowledge retrieved — use your general expertise.",
+            user_context=user_ctx,
+            history=history_text,
+            question=message
+        )
+
+        # 5. Send to Groq as a single user turn (cleaner for token management)
+        messages = [
+            {"role": "user", "content": full_prompt}
+        ]
 
         try:
             response = self.client.chat.completions.create(
-                model=MODEL_NAME, messages=messages,
-                max_tokens=1024, temperature=0.7
+                model=MODEL_NAME,
+                messages=messages,
+                max_tokens=1024,
+                temperature=0.7
             )
             reply = response.choices[0].message.content
+
+            # 6. Update conversation history
             self.update_history(user_id, "user", message, mode)
             self.update_history(user_id, "assistant", reply, mode)
-            # Increment interaction count in profile
+
+            # 7. Increment interaction count
             p = self.user_profiles.get(user_id, {})
             p["interaction_count"] = p.get("interaction_count", 0) + 1
             self.user_profiles[user_id] = p
+
             return reply
+
         except Exception as e:
             error = str(e)
             if "rate_limit" in error.lower():
