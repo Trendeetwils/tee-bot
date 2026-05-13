@@ -569,7 +569,7 @@ Say: "The experience is real. Your brain genuinely produced it. The question is 
     {
         "id": "theme_49",
         "title": "The Meaning Question — Why Bother If There's No God?",
-        "keywords": ["what's the point without god", "life meaning", "meaning of life", "existence", "life purpose", "why exist", "nothing matters", "God creates for a purpose", "why does existence continues", ],
+        "keywords": ["what's the point without god", "nihilism", "free thought", "humanity", "life meaning", "meaning of life", "existence", "life purpose", "why exist", "nothing matters", "God creates for a purpose", "why does existence continues", ],
         "content": """TOPIC: The question "why does this game of existing go on?" is not answered by religion — it is only postponed by it. Saying "God created you for a purpose" simply adds one more unanswered question: why did God bother? Secular philosophy has engaged this question more honestly than any religion.
 - The question "why does existence continue?" is not solved by God — it is just pushed back one level. Why did God exist? Why did God want to create? What is God's purpose? The regress doesn't stop, it just becomes unfalsifiable
 - Albert Camus addressed this directly — the "absurd" is the gap between humanity's demand for meaning and the universe's silence. His answer: revolt. Acknowledge the absurdity and live fully anyway. Sisyphus must be imagined happy
