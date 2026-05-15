@@ -18,34 +18,58 @@ BROADCAST_CHANNEL = os.getenv("BROADCAST_CHANNEL", "")
 
 DAILY_DROPS = [
     # Faith
-    ("🛐", "If God is all-powerful and all-loving — why do innocent children get cancer?", "faith"),
-    ("📖", "The flood story in the Bible?\n\nIt appears in the Babylonian *Epic of Gilgamesh* — written 1000 years earlier.\n\n*Did God recycle the script?*", "faith"),
-    ("📖", "The Bible has been rewritten over 450 times. Which version is the real word of God?", "faith"),
-    ("😔", "Some of the most religious people on earth are also the poorest.\n\n*Is God testing them — or has religion taught them to accept what they should be fighting?*", "faith"),
-    ("💸", "Prosperity gospel pastors preach that *faith brings wealth.*\n\nTheir congregations are poor. The pastor drives a Rolls Royce.\n\n*Whose faith is actually working here?*", "faith"),
-    ("😔", "If God sees every sparrow that falls — does he also see every child that starves?\n\nAnd if he sees it — *why doesn't he stop it?*\n\nThe free will argument doesn't cover hunger.", "faith"),
-    ("🛐", "Muhammad married a 9-year-old. Does that disqualify him as a moral guide?", "faith"),
-    ("📖", "The Bible says God is unchanging (Malachi 3:6).\nThe Bible says God regretted creating humans (Genesis 6:6).\n\n*An unchanging God who has regrets is a contradiction.*\n\nWhich verse do you follow?", "faith"),
-    ("📖", "Christmas trees, Easter eggs — both come from pagan traditions. Does your faith know?", "faith"),
-     ("🚗", "You survived a car crash that killed the other driver.\n\nWas God protecting you?\n\n*If yes — what did the other driver do wrong?*", "faith"),
-    ("✈️", "A plane crashes. 200 people die. 3 survive.\n\nThe 3 survivors say *God saved me.*\n\n*What did God say to the other 200?*", "faith"),
-    ("🚗", "You survived something that should have killed you.\n\nMost people call that a miracle.\n\n*But if God chooses who survives — he also chooses who doesn't.*\n\nIs that the God you believe in?", "faith"),
-    ("🛐", "If God knows everything you'll do before you're born — is punishing you even fair?", "faith"),
-     ("🏥", "You got sick. The doctor treated you. You recovered.\n\nWho do you thank first — *God or the doctor?*\n\nAnd if God gets the credit — what does the doctor get?", "faith"),
-    ("💊", "Doctors spend 10+ years training to save lives.\n\nYou're on the operating table.\n\nIs the scalpel guided by God — or by a human who studied anatomy for a decade?", "faith"),
-    ("🏥", "Every time medicine saves someone — believers say *God healed them.*\n\nWhen it doesn't work — they say *God called them home.*\n\n*God wins either way. The doctor gets nothing.*\n\nDoes that seem fair?", "faith"),
-    ("📖", "The Council of Nicaea in 325 AD — humans voted on what goes in the Bible. Comfortable with that?", "faith"),
-    ("🛐", "Islam spread across Africa largely by conquest. Does a religion of peace do that?", "faith"),
-    ("💀", "When a child dies from cancer — people say *it was God's will.*\n\nWhen a doctor saves a child — people say *God is good.*\n\n*Which one is actually God's will?*", "faith"),
-    ("💀", "If God controls when you die — why do people go to hospital?\n\nIf it's your time — the hospital won't help.\n\nIf it's not — you don't need it.\n\n*So what exactly is medicine for?*", "faith"),
-    ("🕊️", "Is death God's will — or just biology?\n\nBecause if God decides when everyone dies —\n\n*He also decided every genocide, every famine, every child killed in war.*\n\nStill comfortable calling that a plan?", "faith"),
-    ("📖", "Hell — eternal torture for a short life. Is that justice or a control mechanism?", "faith"),
-     ("🏆", "You worked hard for 10 years and built something.\n\nYou thank God.\n\nBut you did the work. You made the calls. You showed up.\n\n*At what point does the credit belong to you?*", "faith"),
-    ("🌅", "Hope is real. Prayer feels real. Community feels real.\n\nBut are those things evidence of God — or evidence that humans need structure and meaning?\n\n*You can have all of those without a deity.*", "faith"),
-    ("🛐", "Both Islam and Christianity say only their followers go to heaven. Both can't be right. So?", "faith"),
-    ("📖", "Teaching children they are born sinful — is that faith or psychological damage?", "faith"),
-     ("🔥", "Hell — eternal torture for rejecting God.\n\nA parent who loved their child unconditionally would never do that.\n\n*Why does God get a pass?*", "faith"),
-    ("🔥", "You lived 80 years. You rejected God.\n\nYou burn forever.\n\n*Eternal punishment for a finite life isn't justice. It's sadism.*\n\nDoes that sound like love to you?", "faith"),
+    # Add these to DAILY_DROPS:
+    # Prayer (Theme 47)
+    ("🙏", "If God already has a plan — what exactly is prayer changing?\n\nYou're asking an all-knowing God to reconsider.\n\n*That's not faith. That's lobbying.*", "faith"),
+    ("🙏", "Rudy Giuliani left the ICU.\n\nHis team credited prayer — not the doctors.\n\nIf prayer saved him — why did he need the ICU in the first place?\n\n*You don't get to use both and credit only one.*", "faith"),
+    ("🙏", "'I'm praying for you' after a tragedy is the socially acceptable way of saying 'I'm doing nothing.'\n\nAnd somehow — *that's considered kind.*", "faith"),
+
+    # Aisha (Theme 26)
+    ("📖", "Muhammad married Aisha when she was 6. Consummated when she was 9.\n\nThe defence: 'It was normal back then.'\n\nSo was slavery. Does 'normal back then' make it right?", "faith"),
+    ("📖", "If a man today said God told him to marry a 9-year-old — he'd be in prison.\n\nIn the 7th century — he became the most followed prophet in history.\n\n*Context doesn't make it less wrong. It makes us ask harder questions.*", "faith"),
+
+    # Four wives (Theme 27)
+    ("📖", "Islam allows men up to 4 wives.\n\nWomen get 1 husband.\n\nIf God designed marriage — why did he design it so differently for men and women?\n\n*Unless it wasn't God who designed it.*", "faith"),
+
+    # Sunk cost (Theme 37)
+    ("🎰", "40 years of prayer. Decades of tithing. A lifetime of faith.\n\nAnd now you're too invested to question it.\n\n*That's not devotion. That's a sunk cost.*", "faith"),
+    ("🎰", "Most people stay religious for the same reason people stay in bad relationships.\n\n*They've put in too much to walk away.*\n\nIs that faith — or fear of wasted time?", "faith"),
+
+    # Pascal's Wager (Theme 38)
+    ("🎲", "'Believe just in case — you have nothing to lose.'\n\nExcept: which of the 4,000 gods do you bet on?\n\nBelieving in the wrong one might be worse than none.\n\n*Pascal's wager only works if there's one option.*", "faith"),
+
+    # Religious trauma (Theme 52)
+    ("🧠", "Telling a 5-year-old they are born sinful and deserve hell — repeated every Sunday for 18 years.\n\n*We call that upbringing. Therapists call it something else.*", "faith"),
+    ("🧠", "Imagine a partner who said: 'Don't trust your heart — it is deceitful and wicked.'\n\nWe'd call that emotional abuse.\n\nWhen religion says it to a child — we call it theology.", "faith"),
+    ("🧠", "Religious trauma doesn't always look like visible wounds.\n\nSometimes it's a 30-year-old who still can't make decisions without guilt.\n\n*The church they left decades ago still lives in their head.*", "faith"),
+
+    # Bible/Quran assembly (Theme 53)
+    ("📖", "The Bible's canon was decided by a committee vote in 397 AD.\n\nBooks were included. Books were excluded.\n\n*Humans voted on the word of God.*\n\nComfortable with that?", "faith"),
+    ("📖", "The Gospel of Mark was written 40 years after Jesus died.\n\nMatthew and Luke copied from it — word for word in places.\n\n*Four independent eyewitnesses don't copy each other.*", "faith"),
+    ("📖", "Uthman — the 3rd Caliph — standardized the Quran and ordered all other versions burned.\n\nWe will never know what those versions said.\n\n*The word of God — decided by a politician.*", "faith"),
+    ("📖", "Abraham riding a camel sounds harmless.\n\nExcept camels weren't domesticated in that region until 1,000 years after Abraham supposedly lived.\n\n*The author was writing from their own time. Into the past.*", "faith"),
+
+    # Evolution (Theme 50)
+    ("🧬", "'Evolution is just a theory.'\n\nSo is gravity.\n\nIn science, theory doesn't mean guess — it means the best explanation supported by mountains of evidence.\n\n*Try jumping off a building and test both theories simultaneously.*", "faith"),
+    ("🧬", "Creationists accept micro-evolution — small changes within species.\n\nBut reject macro-evolution — big changes over millions of years.\n\nThat's like believing in stairs but not staircases.\n\n*It's the same mechanism. Just more time.*", "faith"),
+
+    # Science self-corrects (Theme 51)
+    ("🔬", "Religion calls it a weakness that science keeps changing.\n\nScientists call it the whole point.\n\n*A map that updates when new roads are built is more useful than one that insists the roads haven't changed since 700 AD.*", "faith"),
+
+    # Spiritual not religious (Theme 48)
+    ("✨", "'I'm not religious — I'm spiritual.'\n\nTranslation: I left the cage but I still like the smell of the bars.\n\n*Spirituality without evidence is just religion with better branding.*", "faith"),
+    ("✨", "Crystals, chakras, manifesting, moon water.\n\nPeople left organized religion to escape magical thinking.\n\n*Then bought magical thinking with a better aesthetic.*", "faith"),
+
+    # Meaning question (Theme 49)
+    ("🌌", "Religion's answer to 'why do we exist?'\n\nTo serve God.\n\nYou are born. You suffer. You die.\n\nAnd the whole point was to praise the being who designed the suffering.\n\n*That's not meaning. That's a job you never applied for.*", "faith"),
+    ("🌌", "'What's the point without God?'\n\nAsks God to be an answer — but God is just another question.\n\nWhat's God's point? Who gave him purpose?\n\n*You haven't solved the problem. You've outsourced it.*", "matrix"),
+
+    # Osho/spiritual leaders (Theme 36)
+    ("👁️", "Osho had Rolls Royces, a commune of followers, and claimed enlightenment.\n\nHe was eventually deported for fraud and immigration violations.\n\n*The only thing distinguishing him from a prophet is time.*", "faith"),
+    ("👁️", "Every religious leader in history has said the same thing:\n\n'God speaks to me. Not to you. Through me.'\n\n*At what point does that stop being divine revelation and start being a business model?*", "faith"),
+
+    # Mutual exclusivity (Theme 46)  
+    ("🛐", "Christianity and Islam both say only their followers reach heaven.\n\nBoth cannot be right.\n\nOne is wrong about the most important question in their theology.\n\n*Which one — and how do you know?*", "faith"),
     # Matrix
     ("🔴", "Most people are living a life someone else designed for them. Are you one of them?", "matrix"),
     ("🧠", "Hard work alone leads to success. True — or the biggest lie you were sold?", "matrix"),
