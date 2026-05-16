@@ -15,7 +15,7 @@ from questions_bank import get_religion_questions
 from matrix_questions import get_matrix_questions
 from referral import (get_referral_link, record_referral,
                       get_referral_count, is_unlocked, UNLOCK_THRESHOLD,
-                      check_and_update_streak, streak_message)          # ← NEW
+                      check_and_update_streak, streak_message)
 from daily_broadcast import broadcast
 from reengagement import send_reengagement_messages
 from image_card import generate_result_card
@@ -62,6 +62,11 @@ def religion_keyboard():
         [InlineKeyboardButton("🕉️ Hinduism",      callback_data="rel_hinduism")],
         [InlineKeyboardButton("✝️ + ☪️ Both",     callback_data="rel_both")],
         [InlineKeyboardButton("🌍 All Religions", callback_data="rel_all")],
+    ])
+
+def location_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("⏭️ Skip", callback_data="location_skip")]
     ])
 
 def build_keyboard(qi, options):
@@ -296,7 +301,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             idx_l = order_faith.index(label) if label in order_faith else 0
             below = sum(bd.get(l, 0) for l in order_faith[:idx_l+1])
             pct_rank = max(5, min(95, round((below / total_tests) * 100)))
-            # ← KEY CHANGE: wording now matches your spec
             leaderboard_line = (
                 f"\n\n📊 You're more atheist than *{pct_rank}%* of people "
                 f"who took this test."
@@ -360,7 +364,8 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "I use it to make examples more relevant to you.\n\n"
                     "_(You can also do this anytime with /location)_"
                 ),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
+                reply_markup=location_keyboard()
             )
             context.user_data["awaiting_location"] = True
     except Exception:
@@ -559,9 +564,18 @@ async def location_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🌍 *Where are you from?*\n\n"
         "Just type your country or city — I'll use it to make examples more relevant to you.\n\n"
         "Example: _Nigeria_, _Ghana_, _Israel_, _Mecca_, _United States_, _Lagos Nigeria_, _Texas US_",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=location_keyboard()
     )
     context.user_data["awaiting_location"] = True
+
+async def skip_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    context.user_data["awaiting_location"] = False
+    await query.edit_message_text(
+        "No worries — you can always set it later with /location 🌍"
+    )
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ADMIN_ID and update.effective_user.id != ADMIN_ID:
@@ -611,6 +625,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ── LOCATION INPUT — must be checked FIRST before anything else ───────────
     if context.user_data.get("awaiting_location"):
         context.user_data["awaiting_location"] = False
+        if low in ("skip", "no", "nah", "pass", "later", "nope", "dont", "don't"):
+            await update.message.reply_text(
+                "No worries — you can always set it later with /location 🌍"
+            )
+            return
         parts = msg.split(",")
         country = parts[-1].strip() if len(parts) > 1 else msg.strip()
         city    = parts[0].strip() if len(parts) > 1 else ""
@@ -802,7 +821,8 @@ async def run_bot():
     ]:
         app.add_handler(CommandHandler(cmd, fn))
 
-    app.add_handler(InlineQueryHandler(inline_query)) 
+    app.add_handler(CallbackQueryHandler(skip_location, pattern="^location_skip$"))
+    app.add_handler(InlineQueryHandler(inline_query))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_error_handler(error_handler)
 
@@ -844,7 +864,7 @@ def main():
         except KeyboardInterrupt:
             print("\n[STOP] Stopped by user.")
             break
-        except Conflict: 
+        except Conflict:
             print("[CONFLICT] Another instance detected. Waiting 15s for it to stop...")
             time.sleep(15)
             retry = 0
@@ -860,4 +880,4 @@ def main():
 
 if __name__ == "__main__":
     import time
-    main() 
+    main()

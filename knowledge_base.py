@@ -643,7 +643,7 @@ Say: "God wrote the Bible? God had 40 anonymous authors, several centuries, mult
     {
         "id": "theme_54",
         "title": "Prosperity Gospel & Televangelists",
-        "keywords": ["prosperity gospel", "joel osteen", "rewards", "kenneth copeland", "creflo dollar", "televangelist", "tithe", "congregation", "sowing reaping", "megachurch", "name it claim it", "word of faith", "give to receive", "church money", "faith healer", "miracle money", "offering", "pastor", "religious scam"],
+        "keywords": ["prosperity gospel", "joel osteen", "rewards", "sow and reap", "church", "kenneth copeland", "creflo dollar", "televangelist", "tithe", "congregation", "sowing reaping", "megachurch", "name it claim it", "word of faith", "give to receive", "church money", "faith healer", "miracle money", "offering", "pastor", "religious scam"],
         "content": """TOPIC: Prosperity gospel is the belief that God rewards faith with material wealth — and that giving money to the church is an investment that God will return "tenfold." It is the perfect religious scam: it takes from the poor, enriches the preacher, and then blames the victim when it doesn't work. Even most devout Christians consider it heresy. It is, structurally, a pyramid scheme with God as the pitch.
 - The mechanism: Give generously → God rewards you with wealth. Fails to deliver → you didn't have enough faith, or didn't give enough. The preacher wins either way. The congregation can never falsify the claim.
 - Jesus explicitly opposed this: "It is easier for a camel to pass through the eye of a needle than for a rich man to enter the kingdom of God." Prosperity gospel preachers built arena-sized churches on the exact verse Jesus was warning against.
