@@ -641,15 +641,23 @@ Key insight: Both books make the same claim — "no human could have written thi
 Say: "God wrote the Bible? God had 40 anonymous authors, several centuries, multiple committees who voted on which parts to include, thousands of copying errors, and political councils deciding which books stayed. That's not how an all-powerful being communicates. That's how a rumor spreads. The Quran can't be the word of God because Muhammad couldn't write? The Quran was still written down by humans, standardized by a politician, and all competing versions were burned. Muhammad's illiteracy doesn't remove human hands from the process — it just means he couldn't check their work.\""""
     },
     {
-        "id": "theme_",
-        "title": "",
-        "keywords": [" "],
-        "content": """TOPIC:
-
-Say: " \""""
+        "id": "theme_54",
+        "title": "Prosperity Gospel & Televangelists",
+        "keywords": ["prosperity gospel", "joel osteen", "rewards", "kenneth copeland", "creflo dollar", "televangelist", "tithe", "congregation", "sowing reaping", "megachurch", "name it claim it", "word of faith", "give to receive", "church money", "faith healer", "miracle money", "offering", "pastor", "religious scam"],
+        "content": """TOPIC: Prosperity gospel is the belief that God rewards faith with material wealth — and that giving money to the church is an investment that God will return "tenfold." It is the perfect religious scam: it takes from the poor, enriches the preacher, and then blames the victim when it doesn't work. Even most devout Christians consider it heresy. It is, structurally, a pyramid scheme with God as the pitch.
+- The mechanism: Give generously → God rewards you with wealth. Fails to deliver → you didn't have enough faith, or didn't give enough. The preacher wins either way. The congregation can never falsify the claim.
+- Jesus explicitly opposed this: "It is easier for a camel to pass through the eye of a needle than for a rich man to enter the kingdom of God." Prosperity gospel preachers built arena-sized churches on the exact verse Jesus was warning against.
+- The apostles were poor and tortured: If faith produces wealth, the most faithful people in Christian history — the apostles — should have been the richest. They were imprisoned and executed. Prosperity gospel's own framework refutes itself.
+- Africa and the developing world: The prosperity gospel spread from the US to sub-Saharan Africa and Latin America. It is most virulent in the poorest communities — people who can least afford it give their savings to pastors promising God will multiply it. The pastor builds a mansion. The congregation stays poor.
+- Kenneth Copeland and Joel Osteen: Copeland has a private jet and a $6M lakeside mansion. Osteen's "church" is a former NBA arena seating 16,000. When Hurricane Harvey flooded Houston, Osteen initially refused to open Lakewood Church as a shelter. His congregation kept filling seats. The product being sold is hope — and it's extremely profitable.
+- The victim-blaming structure: When someone prays and gives and stays poor or gets sick — prosperity gospel tells them it's their fault. Not enough faith. Not enough giving. This makes the theology unfalsifiable AND psychologically abusive. You can't lose if you're the preacher.
+- "Sowing and reaping": The euphemism used instead of "pay me and God will reward you." Same mechanism, softer language.
+- It's not fringe: Joel Osteen averaged 7 million weekly viewers. Creflo Dollar asked his congregation to crowdfund a $65 million private jet. Kenneth Copeland has been caught on camera explaining why he needs a private jet (so he doesn't have to "fly in a long tube with a bunch of demons"). These are not edge cases — they represent billions of dollars of tax-exempt income annually.
+- The real product: Emotional excitement and community belonging. The mega-church experience is engineered like a concert — lighting, music, production value, a charismatic preacher. People pay for the feeling, not the theology.
+Say: "Joel Osteen preaches that faith brings wealth. He lives in a $10 million mansion. His congregation doesn't. The only prosperity gospel that actually works is the one where you're the one selling it. Prosperity gospel is the one theology where being proven wrong just means you need to give more money.\""""
     },
     {
-        "id": "theme_",
+        "id": "theme_55",
         "title": "",
         "keywords": [" "],
         "content": """TOPIC:

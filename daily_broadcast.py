@@ -70,6 +70,19 @@ DAILY_DROPS = [
 
     # Mutual exclusivity (Theme 46)  
     ("🛐", "Christianity and Islam both say only their followers reach heaven.\n\nBoth cannot be right.\n\nOne is wrong about the most important question in their theology.\n\n*Which one — and how do you know?*", "faith"),
+    # Prosperity Gospel / Televangelists
+    ("💸", "Joel Osteen preaches that faith brings wealth.\n\nHe lives in a $10 million mansion.\n\nHis congregation doesn't.\n\n*The only prosperity gospel that works is the one where you're the one selling it.*", "faith"),
+
+    ("💸", "Give money to the church, God gives it back tenfold.\n\nIf it doesn't work — you didn't have enough faith.\n\nIf it does work — God is good.\n\n*The preacher wins either way. You cannot falsify this. That's not theology. That's a pyramid scheme.*", "faith"),
+
+    ("✈️", "Kenneth Copeland asked his congregation why he needs a private jet.\n\nHis answer: so he doesn't have to fly in a tube with 'a bunch of demons.'\n\nHe has multiple jets.\n\n*Your tithe bought one of them.*", "faith"),
+
+    ("🏟️", "Joel Osteen's church is a former NBA arena.\nSeating: 16,000.\nWhen Hurricane Harvey flooded Houston — he initially refused to open it as a shelter.\n\n*They opened it after the backlash. Not after the flood.*", "faith"),
+
+    ("💸", "Prosperity gospel spreads fastest in the world's poorest communities.\n\nPeople who can't afford food give their savings to a pastor promising God will multiply it.\n\n*The pastor builds a mansion. The congregation stays poor. And then gets told they didn't have enough faith.*", "faith"),
+
+    ("💸", "Creflo Dollar asked his congregation to crowdfund a $65 million private jet.\n\nHe said he needed it to spread the gospel.\n\nJesus walked.\n\n*Something changed in the translation.*", "faith"),
+    
     # Matrix
     ("🔴", "Most people are living a life someone else designed for them. Are you one of them?", "matrix"),
     ("🧠", "Hard work alone leads to success. True — or the biggest lie you were sold?", "matrix"),
